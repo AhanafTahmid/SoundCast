@@ -11,6 +11,7 @@ import { clerkMiddleware } from '@clerk/express'
 import fileupload from 'express-fileupload'
 import path from 'path'
 
+
 dotenv.config();
 const __dirname = path.resolve();
 const app = express();
