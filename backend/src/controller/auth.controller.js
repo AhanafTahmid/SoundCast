@@ -11,7 +11,7 @@ export const authCallback = async (req,res,next) => {
             await User.create({
                 clerkId:id,
                 fullName:`${firstName} ${lastName}`,
-                imageUrl
+                imageUrl: req.body.imageUrl
             });
         }
         res.status(200).json({
