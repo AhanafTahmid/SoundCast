@@ -52,7 +52,7 @@ export const getMadeForYouSongs = async (req, res, next) => {
         next(error);
     }
 };
-export const getTradingSongs = async (req, res, next) => {
+export const getTrendingSongs = async (req, res, next) => {
     try { // Assuming user preferences are available in the request object
         const songs = await Song.aggregate([
             { $sample: { size: 4 } }, // Randomly select 10 songs

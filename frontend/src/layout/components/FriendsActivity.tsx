@@ -26,6 +26,7 @@ const FriendsActivity = () => {
 
             <ScrollArea className='flex-1'>
             <div className='p-4 space-y-4'> 
+                
                 {users.map((user)=>(
                     <div key = {user.id} className="cursor-pointer hover:bg-zinc-800/50 p-3 rounded-md transition-colors group">
                         <div className='flex items-start gap-3'> 

@@ -1,14 +1,17 @@
 import { axiosInstance } from '@/lib/axios';
-import { Album } from '@/types';
+import { Album, Song } from "@/types";
 import {create} from 'zustand';
 
 interface MusicStore {
-	songs: any[];
-	albums: any[];	
+	songs: Song[];
+	albums: Album[];
 	isLoading: boolean;
 	error: string | null;
 	currentAlbum: Album | null;
-	
+	featuredSongs: Song[];
+	madeForYouSongs: Song[];
+	trendingSongs: Song[];
+
 
 	fetchAlbums: () => Promise<void>;
 	fetchAlbumById: (id: string) => Promise<void>;
@@ -54,7 +57,6 @@ export const useMusicStore = create<MusicStore>((set) => ({
 			set({ isLoading: false });
 		}
 	},
-
 	fetchFeaturedSongs: async() => {
 		set({isLoading: true, error:null});
 		try {
