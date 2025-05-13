@@ -9,7 +9,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 
 const Topbar = () => {
 	const {isAdmin} = useAuthStore();
-	console.log({ isAdmin });
+	//console.log({ isAdmin });
 
 	return (
 		<div
