@@ -1,6 +1,6 @@
 import { axiosInstance } from '@/lib/axios';
 import { Album, Song, Stats } from "@/types";
-import { f } from 'node_modules/@clerk/clerk-react/dist/useAuth-D-mOWUVF.d.mts';
+//import { f } from 'node_modules/@clerk/clerk-react/dist/useAuth-D-mOWUVF.d.mts';
 import toast from 'react-hot-toast';
 import {create} from 'zustand';
 
@@ -14,7 +14,6 @@ interface MusicStore {
 	madeForYouSongs: Song[];
 	trendingSongs: Song[];
 	stats :Stats
-
 
 	fetchAlbums: () => Promise<void>;
 	fetchAlbumById: (id: string) => Promise<void>;
@@ -93,10 +92,14 @@ export const useMusicStore = create<MusicStore>((set) => ({
 	},
 	fetchStats: async() => {
 		set({ isLoading: true, error: null });
+		
 		try {
 			const response = await axiosInstance.get("/stats");
 			set({ stats: response.data });
+			//console.log("fetching stats");
+			//console.log( response.data);
 		} catch (error: any) {
+			//console.log("fetching stats "+ error);
 			set({ error: error.message });
 		} finally {
 			set({ isLoading: false });

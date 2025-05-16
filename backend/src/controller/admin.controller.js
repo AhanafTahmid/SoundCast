@@ -13,6 +13,7 @@ const uploadToCloudinary = async (file) => {
         throw new Error("Error in uploading to cloudinary");
     }
 }
+
 export const createSong = async(req, res,next)=>{
     try {
         if(!req.files || !req.files.audioFile || !req.files.imageFile){
