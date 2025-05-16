@@ -101,10 +101,6 @@ export const createAlbum = async (req, res, next) => {
         res.status(201).json(album);
     } catch (error) {
         console.log("Error in creating album", error);
-        // res.status(500).json({
-        //     message: "Internal server error",
-        //     error
-        // });
         next(error);
     }
 };
