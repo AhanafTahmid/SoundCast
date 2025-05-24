@@ -7,6 +7,7 @@
 3. Setup .env files on both frontend and backend folder  
 Frontend env:  
 VITE_CLERK_PUBLISHABLE_KEY =  
+ 
 Backend env:  
 PORT =  
 MONGODB_URI =  
