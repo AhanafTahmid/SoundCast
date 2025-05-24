@@ -6,6 +6,7 @@
 2. Run "npm i" on both frontend and backend folder
 3. Setup .env files on both frontend and backend folder
 
+
 Frontend env:
 VITE_CLERK_PUBLISHABLE_KEY=
 
