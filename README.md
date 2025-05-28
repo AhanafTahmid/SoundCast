@@ -18,3 +18,8 @@ ClOUDINARY_ClOUD_NAME =
 NODE_ENV =  
 CLERK_PUBLISHABLE_KEY =  
 CLERK_SECRET_KEY =  
+
+
+# Tools Used
+For Text to audio Generation: https://console.groq.com/docs/text-to-speech 
+For Text to image Generation: https://studio.nebius.com/?modality=text2image
