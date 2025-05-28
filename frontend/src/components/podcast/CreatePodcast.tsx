@@ -5,25 +5,25 @@ import toast from "react-hot-toast";
 
 const GROQ_VOICE = [
   // Groq TTS voices
-  { label: "Arista (TTS)", value: "Arista-PlayAI" },
-  { label: "Atlas (TTS)", value: "Atlas-PlayAI" },
-  { label: "Basil (TTS)", value: "Basil-PlayAI" },
-  { label: "Briggs (TTS)", value: "Briggs-PlayAI" },
-  { label: "Calum (TTS)", value: "Calum-PlayAI" },
-  { label: "Celeste (TTS)", value: "Celeste-PlayAI" },
-  { label: "Cheyenne (TTS)", value: "Cheyenne-PlayAI" },
-  { label: "Chip (TTS)", value: "Chip-PlayAI" },
-  { label: "Cillian (TTS)", value: "Cillian-PlayAI" },
-  { label: "Deedee (TTS)", value: "Deedee-PlayAI" },
-  { label: "Fritz (TTS)", value: "Fritz-PlayAI" },
-  { label: "Gail (TTS)", value: "Gail-PlayAI" },
-  { label: "Indigo (TTS)", value: "Indigo-PlayAI" },
-  { label: "Mamaw (TTS)", value: "Mamaw-PlayAI" },
-  { label: "Mason (TTS)", value: "Mason-PlayAI" },
-  { label: "Mikail (TTS)", value: "Mikail-PlayAI" },
-  { label: "Mitch (TTS)", value: "Mitch-PlayAI" },
-  { label: "Quinn (TTS)", value: "Quinn-PlayAI" },
-  { label: "Thunder (TTS)", value: "Thunder-PlayAI" }
+  { label: "Arista", value: "Arista-PlayAI" },
+  { label: "Atlas", value: "Atlas-PlayAI" },
+  { label: "Basil", value: "Basil-PlayAI" },
+  { label: "Briggs", value: "Briggs-PlayAI" },
+  { label: "Calum", value: "Calum-PlayAI" },
+  { label: "Celeste", value: "Celeste-PlayAI" },
+  { label: "Cheyenne", value: "Cheyenne-PlayAI" },
+  { label: "Chip", value: "Chip-PlayAI" },
+  { label: "Cillian", value: "Cillian-PlayAI" },
+  { label: "Deedee", value: "Deedee-PlayAI" },
+  { label: "Fritz", value: "Fritz-PlayAI" },
+  { label: "Gail", value: "Gail-PlayAI" },
+  { label: "Indigo", value: "Indigo-PlayAI" },
+  { label: "Mamaw", value: "Mamaw-PlayAI" },
+  { label: "Mason", value: "Mason-PlayAI" },
+  { label: "Mikail", value: "Mikail-PlayAI" },
+  { label: "Mitch", value: "Mitch-PlayAI" },
+  { label: "Quinn", value: "Quinn-PlayAI" },
+  { label: "Thunder", value: "Thunder-PlayAI" }
 ];
 
 const CATEGORIES = [
@@ -62,9 +62,9 @@ const CreatePodcast = () => {
   const [podcastTitle, setPodcastTitle] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [customImage, setCustomImage] = useState<File | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [thumbnailPrompt, setThumbnailPrompt] = useState("");
-  const [customImage, setCustomImage] = useState<File | null>(null);
   const [aiVoice, setaiVoice] = useState(GROQ_VOICE[0].value);
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
@@ -78,8 +78,9 @@ const CreatePodcast = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      console.log("Image uploaded:", e.target.files[0]);
       setCustomImage(e.target.files[0]);
-      setAiThumbnailUrl(null); // If uploading, clear AI thumbnail
+      setAiThumbnailUrl(URL.createObjectURL(e.target.files[0])); // Set thumbnailUrl to custom image
     }
   };
   
@@ -117,13 +118,12 @@ const CreatePodcast = () => {
     if (!thumbnailPrompt) return;
     setGeneratingThumbnail(true);
     setAiThumbnailUrl(null);
-    
+    setCustomImage(null); // If using AI, clear uploaded image
     try {
       const res = await axios.post("http://localhost:5000/api/podcast/thumbnail", {
           prompt: thumbnailPrompt
       });
       setAiThumbnailUrl(res.data.imageUrl); // Your backend should return a URL or base64 image
-      setCustomImage(null); // If using AI, clear uploaded image
     } catch (err) {
       //alert("Failed to generate thumbnail");
     } finally {
@@ -136,7 +136,7 @@ const CreatePodcast = () => {
     e.preventDefault();
 
     // Validate required fields
-    if (podcastTitle==="" || category === "" || description === "" || !aiAudioUrl || !(aiThumbnailUrl || customImage)) {
+    if (podcastTitle==="" || category === "" || description === "" || !aiAudioUrl || !aiThumbnailUrl) {
       toast.error("Please enter all details");
       return;
     }
@@ -159,8 +159,7 @@ const CreatePodcast = () => {
       category,
       description,
       audioUrl: aiAudioUrl!,
-      thumbnailUrl: aiThumbnailUrl!,
-      customImage: customImage ? URL.createObjectURL(customImage) : null,
+      thumbnailUrl: aiThumbnailUrl, // Always use aiThumbnailUrl (AI or custom)
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -302,12 +301,9 @@ const CreatePodcast = () => {
           <label className="block text-zinc-300 mb-2">Thumbnail Preview</label>
           <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#2A2D36] rounded-lg py-8 bg-[#181A20] min-h-[120px]">
             {aiThumbnailUrl && (
-              <img src={aiThumbnailUrl} alt="AI Thumbnail" className="max-h-auto rounded mb-2 w-95" />
+              <img src={aiThumbnailUrl} alt="Thumbnail" className="max-h-auto rounded mb-2 w-95" />
             )}
-            {customImage && (
-              <img src={URL.createObjectURL(customImage)} alt="Custom Thumbnail" className="max-h-auto rounded mb-2 w-95 bg-cover" />
-            )}
-            {!aiThumbnailUrl && !customImage && (
+            {!aiThumbnailUrl && (
               <span className="text-zinc-400 text-sm">No thumbnail selected</span>
             )}
           </div>

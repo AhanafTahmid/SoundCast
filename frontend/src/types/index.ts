@@ -48,7 +48,6 @@ export interface Podcast {
 	description: string;
 	audioUrl: string;
 	thumbnailUrl: string;
-	customImage: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
