@@ -217,10 +217,12 @@ export const createPodcast = async (req, res, next) => {
 };
 
 export const getAllPodcasts = async (req, res, next) => {
+  //find all podcast by users
   try {
-    const podcasts = await Podcast.find().populate('userName', 'name email');
-    res.json(podcasts);
+    const podcasts = await Podcast.find().sort({ createdAt: -1 });
+    res.status(200).json(podcasts);
   } catch (error) {
+    console.error("Error fetching podcasts:", error);
     next(error);
   }
 };
@@ -252,7 +254,7 @@ export const uploadImageFile = async (req, res, next) => {
     let imageFile = req.files.imageFile;
     // If multiple files, take the first one
     if (Array.isArray(imageFile)) imageFile = imageFile[0];
-    const imageUrl = await uploadToCloudinary(imageFile);
+    const imageUrl = await uploadToCloudinaryIMG(imageFile);
     res.json({ imageUrl });
   } catch (error) {
     console.error('Error in uploadImageFile:', error);
