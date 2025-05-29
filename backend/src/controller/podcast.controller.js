@@ -141,8 +141,6 @@ export const generatePodcastAudio = async (req, res, next) => {
     });
 
     const buffer = Buffer.from(await response.arrayBuffer());
-    // Ensure tmp directory exists
-    await fs.promises.mkdir("tmp", { recursive: true });
     // Save to a temp file
     const fileName = `speech_${Date.now()}.wav`;
     const tempFilePath = path.join("tmp", fileName);
