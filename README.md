@@ -25,6 +25,6 @@ OPENAI_API_KEY =
 GROQ_API_KEY =  
 NEBIUS_API_KEY =  
 
-# Tools Used
+## Tools Used
 For Text to audio Generation : [GROQ](https://console.groq.com/docs/text-to-speech)  
 For Text to image Generation : [NEBIUS](https://studio.nebius.com/?modality=text2image)
