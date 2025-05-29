@@ -23,15 +23,47 @@ const nebius = new OpenAI({
 // helper function to upload files to cloudinary 
 const uploadToCloudinary = async (file) => {
     try {
-        const result = await cloudinary.uploader.upload(file.tempFilePath, {
-            resource_type:"auto"
-        })
-        return result.secure_url;
+        if (file.tempFilePath) {
+            // express-fileupload
+            const result = await cloudinary.uploader.upload(file.tempFilePath, {
+                resource_type: "auto"
+            });
+            return result.secure_url;
+        } else if (file.buffer) {
+            // multer
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { resource_type: "auto" },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result);
+                    }
+                );
+                stream.end(file.buffer);
+            });
+            return result.secure_url;
+        } else {
+            throw new Error("File format not supported for Cloudinary upload");
+        }
     } catch (error) {
-        console.log("Error in uploading to cloudinary",error);
+        console.log("Error in uploading to cloudinary", error);
         throw new Error("Error in uploading to cloudinary");
     }
 }
+
+export const uploadToCloudinaryIMG = async (imageUrl, folder = "images") => {
+  try {
+    const result = await cloudinary.uploader.upload(imageUrl, {
+      folder,
+      resource_type: "image", // or "auto" if you're not sure
+    });
+    return result;
+  } catch (err) {
+    console.error("Cloudinary upload error:", err);
+    throw new Error("Error in uploading to cloudinary");
+  }
+};
+
 
 // Generate podcast audio (returns text or audio URL)
 export const generatePodcast = async (req, res, next) => {
@@ -108,16 +140,21 @@ export const generatePodcastAudio = async (req, res, next) => {
       response_format: responseFormat
     });
 
-
     const buffer = Buffer.from(await response.arrayBuffer());
-    // Save to a temp file and return the file path or serve as a download
+    // Save to a temp file
     const fileName = `speech_${Date.now()}.wav`;
-    const filePath = path.join("podcastFiles", fileName);
-    await fs.promises.writeFile(filePath, buffer);
-    // Option 1: Send the file as a download
-    // res.download(filePath);
-    // Option 2: Send the file URL (if you serve static files from /podcastFiles)
-    res.json({ audioUrl: `/podcastFiles/${fileName}` });
+    const tempFilePath = path.join("tmp", fileName);
+    await fs.promises.writeFile(tempFilePath, buffer);
+
+    // Upload to Cloudinary
+    const cloudinaryResult = await cloudinary.uploader.upload(tempFilePath, {
+      resource_type: "auto"
+    });
+    // Remove temp file after upload
+    await fs.promises.unlink(tempFilePath);
+
+    // Return Cloudinary URL
+    res.json({ audioUrl: cloudinaryResult.secure_url });
   } catch (error) {
     next(error);
   }
@@ -125,26 +162,40 @@ export const generatePodcastAudio = async (req, res, next) => {
 
 
 export const createPodcast = async (req, res, next) => {
-  console.log("Creating podcast with body:", req.body);
+  //console.log("Creating podcast with body:", req.body);
+  //console.log("Creating podcast with body:", req.body);
+ 
+  //console.log("Files in request:", req.files.imageFile);
+
   try {
-    const { userId, title, category, description, aiVoice, aiPodcastPrompt, aiThumbnailPrompt } = req.body;
-    if (!userId || !title || !category || !description || !aiVoice || !aiPodcastPrompt || !aiThumbnailPrompt) {
+    const { userName, title, category, description, aiVoice, aiPodcastPrompt, aiThumbnailPrompt, aiThumbnailURL, imageFile, audiourl, audioFile } = req.body;
+      //console.log(aiThumbnailURL);
+     //const image = req.files.imageFile;
+    //  console.log("Files in request:", req.files);
+    //  console.log("Files in request:", aiThumbnailPrompt);
+    //  console.log("Files in request:", audioFile);
+    
+    if (!userName || !title || !category || !description || !aiVoice || !aiPodcastPrompt || !(aiThumbnailURL || imageFile) || !audiourl) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     // Check for uploaded files url
-    if (!req.files.audioFile || !req.files.imageFile) {
-      return res.status(400).json({ message: "Please upload both audio and image files" });
-    }
+    // console.log("Files in request:", req.body);
+    // console.log("Files in request:", req.files.audioFile, req.files.imageFile);
+    // if (!req.files.audioFile || !req.files.imageFile) {
+    //   return res.status(400).json({ message: "Please upload both audio and image files" });
+    // }
 
     // // Upload audio and image to Cloudinary
-    const audioUrl = await uploadToCloudinary(req.files.audioFile);
-    const thumbnailUrl = await uploadToCloudinary(req.files.imageFile);
+    console.log(aiThumbnailURL);
+    const audioUrl = "";
+    //const audioUrl = await uploadToCloudinary(req.files.audioFile);
+    const thumbnailUrl = await uploadToCloudinaryIMG(aiThumbnailURL || req.files.imageFile);
 
     // Create podcast documeant in MongoDB
     
     const podcast = new Podcast({
-      userId,
+      userName,
       title,
       category,
       description,
@@ -167,6 +218,41 @@ export const getAllPodcasts = async (req, res, next) => {
     const podcasts = await Podcast.find().populate('userId', 'name email');
     res.json(podcasts);
   } catch (error) {
+    next(error);
+  }
+};
+
+// Upload audio file to Cloudinary and return the URL
+export const uploadAudioFile = async (req, res, next) => {
+  try {
+    console.log('req.files:', req.files);
+    if (!req.files || !req.files.audioFile) {
+      console.log('No audioFile found in req.files');
+      return res.status(400).json({ message: "No audio file uploaded" });
+    }
+    const audioFile = req.files.audioFile;
+    console.log('audioFile:', audioFile);
+    const audioUrl = await uploadToCloudinary(audioFile);
+    res.json({ audioUrl });
+  } catch (error) {
+    console.error('Error in uploadAudioFile:', error);
+    next(error);
+  }
+};
+
+// Upload image file to Cloudinary and return the URL
+export const uploadImageFile = async (req, res, next) => {
+  try {
+    if (!req.files || !req.files.imageFile) {
+      return res.status(400).json({ message: "No image file uploaded" });
+    }
+    let imageFile = req.files.imageFile;
+    // If multiple files, take the first one
+    if (Array.isArray(imageFile)) imageFile = imageFile[0];
+    const imageUrl = await uploadToCloudinary(imageFile);
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error('Error in uploadImageFile:', error);
     next(error);
   }
 };

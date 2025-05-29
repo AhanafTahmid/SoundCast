@@ -29,7 +29,9 @@ app.use(fileupload(
             fileSize: 10*1024*1024 //10mb max file size 
         }
     }
+
 ))
+
 const PORT = process.env.PORT
 
 const httpServer = createServer(app);
@@ -51,14 +53,14 @@ app.use("/api/stats",startRouters)
 app.use("/api/podcast", Generate);
 
 // Ensure podcastFiles directory exists at startup
-const tmpDir = path.join(__dirname, 'podcastFiles');
-if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir);
-}
+// const tmpDir = path.join(__dirname, 'podcastFiles');
+// if (!fs.existsSync(tmpDir)) {
+//     fs.mkdirSync(tmpDir);
+// }
 
-// Serve static files from tmp directory for audio playback
-app.use('/podcastFiles', express.static(tmpDir));
-app.use('/podcastImages', express.static(tmpDir));
+// // Serve static files from tmp directory for audio playback
+// app.use('/podcastFiles', express.static(tmpDir));
+// app.use('/podcastImages', express.static(tmpDir));
 
 // error handling
 app.use((err, req, res, next) => {

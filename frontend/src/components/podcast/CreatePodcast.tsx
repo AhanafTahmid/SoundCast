@@ -67,34 +67,37 @@ const CreatePodcast = () => {
   const [aiVoice, setaiVoice] = useState(GROQ_VOICE[0].value);
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
-  const [aiAudioUrl, setAiAudioUrl] = useState<string | null>(null);
+  let [aiAudioUrl, setAiAudioUrl] = useState<string | null>(null);
   const [aiThumbnailUrl, setAiThumbnailUrl] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [customImage, setCustomImage] = useState<File | null>(null);
 
   const addPodcast = usePodcastStore((s) => s.addPodcast);
   const podcastList = usePodcastStore((s) => s.podcastList);
   const { user } = useUser();
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Remove audio upload input/button and handler
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      //console.log("Image uploaded:", e.target.files[0]);
-      setCustomImage(e.target.files[0]);
-      setAiThumbnailUrl(URL.createObjectURL(e.target.files[0])); // Set thumbnailUrl to custom image
+      const file = e.target.files[0];
+      // Immediately upload image to backend for Cloudinary storage
+      const formData = new FormData();
+      formData.append("imageFile", file);
+      try {
+        // Use the same upload endpoint as audio, but for images
+        const res = await axios.post("http://localhost:5000/api/podcast/upload-image", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        setAiThumbnailUrl(res.data.imageUrl); // Use Cloudinary URL for preview and podcast creation
+        toast.success("Image uploaded to Cloudinary!");
+      } catch (err) {
+        toast.error("Failed to upload image to Cloudinary");
+      }
     }
   };
 
-  // Handle audio file upload from user
-  const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setAudioFile(e.target.files[0]);
-      setAiAudioUrl(URL.createObjectURL(e.target.files[0])); // For preview
-    }
-  };  
-  
   // Call your backend to generate podcast audio using OpenAI
   const handleGeneratePodcast = async () => {
     if (!aiPrompt) {
@@ -107,6 +110,7 @@ const CreatePodcast = () => {
     }
     setGeneratingAudio(true);
     setAiAudioUrl(null);
+    setAudioFile(null); // Reset audio file before generating
     try {
       const res = await axios.post("http://localhost:5000/api/podcast/generate", {
         text: aiPrompt,
@@ -114,8 +118,16 @@ const CreatePodcast = () => {
         voice: aiVoice,
         description,
       });
-      setAiAudioUrl(res.data.audioUrl); // Your backend should return a URL or base64 audio
-      toast.success("Podcast audio generated!");
+      // Use only the Cloudinary URL returned by backend
+      const audioUrl = res.data.audioUrl;
+      setAiAudioUrl(audioUrl); // Cloudinary URL only
+      // Fetch the audio file as a Blob and store as File for upload (if needed elsewhere)
+      const audioResponse = await fetch(audioUrl);
+      const audioBlob = await audioResponse.blob();
+      const fileName = audioUrl.split('/').pop() || 'ai-audio.wav';
+      const file = new File([audioBlob], fileName, { type: audioBlob.type });
+      setAudioFile(file);
+      toast.success("Podcast audio generated and ready for upload!");
     } catch (err) {
       console.log(err);
       toast.error("Failed to generate podcast audio");
@@ -129,7 +141,6 @@ const CreatePodcast = () => {
     if (!thumbnailPrompt) return;
     setGeneratingThumbnail(true);
     setAiThumbnailUrl(null);
-    setCustomImage(null); // If using AI, clear uploaded image
     try {
       const res = await axios.post("http://localhost:5000/api/podcast/thumbnail", {
           prompt: thumbnailPrompt
@@ -144,13 +155,11 @@ const CreatePodcast = () => {
 
   const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
-
     // Validate required fields
-    if (podcastTitle==="" || category === "" || description === "" || !aiAudioUrl || !aiThumbnailUrl) {
+    if (podcastTitle==="" || category === "" || description === "" || !audioFile || !aiThumbnailUrl) {
       toast.error("Please enter all details");
       return;
     }
-
     // Prevent duplicate podcast (same title, description, audio, and thumbnail)
     const isDuplicate = podcastList.some(
       (p) =>
@@ -163,29 +172,26 @@ const CreatePodcast = () => {
       toast.error("You cannot create the same podcast twice");
       return;
     }
-
     if (!user) {
       toast.error("You must be signed in to create a podcast");
       return;
     }
-
     //push in dbms
     const formData = new FormData();
-    formData.append("userId", user.id);
+    formData.append("userName", user.fullName!);
     formData.append("title", podcastTitle);
     formData.append("category", category);
     formData.append("description", description);
     formData.append("aiVoice", aiVoice);
     formData.append("aiPodcastPrompt", aiPrompt);
     formData.append("aiThumbnailPrompt", thumbnailPrompt);
-    // formData.append("audioFile", audioFile);
-    // formData.append("imageFile", customImage);
-    console.log("Audio file:", audioFile);
-    //console.log("Custom image:", customImage);
-    
-    
-
-
+    formData.append("aiThumbnailURL", aiThumbnailUrl!); // Always a Cloudinary URL now
+    // Don't send customImage, only send aiThumbnailUrl (Cloudinary URL)
+    formData.append("audiourl", aiAudioUrl!); // Always a Cloudinary URL
+    // Don't send audioFile, only send aiAudioUrl (Cloudinary URL)
+    // ...existing code...
+    console.log("Audio file to upload:", aiAudioUrl);
+    console.log("Thumbnail:", aiThumbnailUrl);
     // console.log("Form data prepared for submission:", formData);
     // console.log("audio", formData.get("audioFile"));
     // console.log("image", formData.get("imageFile"));
@@ -202,7 +208,7 @@ const CreatePodcast = () => {
       category,
       description,
       audioUrl: aiAudioUrl!,
-      thumbnailUrl: aiThumbnailUrl, // Always use aiThumbnailUrl (AI or custom)
+      thumbnailUrl: aiThumbnailUrl || "", // Ensure string type
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
