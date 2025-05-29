@@ -195,7 +195,6 @@ export const createPodcast = async (req, res, next) => {
     // audioUrl: must be provided from frontend (Cloudinary URL)
     const audioUrl = audiourl;
     // aiThumbnailPrompt: must be provided from frontend
-    const aiThumbnailPromptValue = aiThumbnailPrompt || "AI generated";
     // Create podcast document in MongoDB
     const podcast = new Podcast({
       userName,
@@ -204,7 +203,7 @@ export const createPodcast = async (req, res, next) => {
       description,
       aiVoice,
       aiPodcastPrompt,
-      aiThumbnailPrompt: aiThumbnailPromptValue,
+      aiThumbnailPrompt,
       audioUrl,
       thumbnailUrl
     });
@@ -254,7 +253,7 @@ export const uploadImageFile = async (req, res, next) => {
     let imageFile = req.files.imageFile;
     // If multiple files, take the first one
     if (Array.isArray(imageFile)) imageFile = imageFile[0];
-    const imageUrl = await uploadToCloudinaryIMG(imageFile);
+    const imageUrl = await uploadToCloudinary(imageFile);
     res.json({ imageUrl });
   } catch (error) {
     console.error('Error in uploadImageFile:', error);

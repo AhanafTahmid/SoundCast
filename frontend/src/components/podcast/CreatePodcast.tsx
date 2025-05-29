@@ -67,6 +67,8 @@ const CreatePodcast = () => {
   const [aiVoice, setaiVoice] = useState(GROQ_VOICE[0].value);
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   let [aiAudioUrl, setAiAudioUrl] = useState<string | null>(null);
   const [aiThumbnailUrl, setAiThumbnailUrl] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -82,18 +84,20 @@ const CreatePodcast = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      // Immediately upload image to backend for Cloudinary storage
       const formData = new FormData();
       formData.append("imageFile", file);
+      setIsUploadingImage(true);
       try {
-        // Use the same upload endpoint as audio, but for images
         const res = await axios.post("http://localhost:5000/api/podcast/upload-image", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        setAiThumbnailUrl(res.data.imageUrl); // Use Cloudinary URL for preview and podcast creation
-        toast.success("Image uploaded to Cloudinary!");
-      } catch (err) {
-        toast.error("Failed to upload image to Cloudinary");
+        toast.success("Image uploaded successfully!");
+        setAiThumbnailUrl(res.data.imageUrl);
+        // No toast on success
+      } catch (err: any) {
+        // No toast on error
+      } finally {
+        setIsUploadingImage(false);
       }
     }
   };
@@ -185,7 +189,7 @@ const CreatePodcast = () => {
     formData.append("aiVoice", aiVoice);
     formData.append("aiPodcastPrompt", aiPrompt);
     formData.append("aiThumbnailPrompt", thumbnailPrompt);
-    
+
     // It is both aithumbnailUrl and customImage, but we only use aiThumbnailUrl now
     formData.append("aiThumbnailURL", aiThumbnailUrl!); // Always a Cloudinary URL now, aiThumbnailUrl is set after image upload
     // Don't send customImage, only send aiThumbnailUrl (Cloudinary URL)
@@ -198,29 +202,34 @@ const CreatePodcast = () => {
     // console.log("audio", formData.get("audioFile"));
     // console.log("image", formData.get("imageFile"));
 
-    await axios.post("http://localhost:5000/api/podcast/create", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    toast.success("Podcast created successfully!");
+    setIsCreating(true);
+    try {
+      await axios.post("http://localhost:5000/api/podcast/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      toast.success("Podcast created successfully!");
 
-    const newPodcast = {
-      title: podcastTitle,
-      category,
-      description,
-      audioUrl: aiAudioUrl!,
-      thumbnailUrl: aiThumbnailUrl || "", // Ensure string type
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    //const newPodcastMongo = await axios.post("http://localhost:5000/api/podcast/create", newPodcast);
-    // console.log(aiThumbnailUrl);
+      const newPodcast = {
+        title: podcastTitle,
+        category,
+        description,
+        audioUrl: aiAudioUrl!,
+        thumbnailUrl: aiThumbnailUrl || "", // Ensure string type
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      //const newPodcastMongo = await axios.post("http://localhost:5000/api/podcast/create", newPodcast);
+      // console.log(aiThumbnailUrl);
 
-    addPodcast(newPodcast);
-    // console.log("Toast should show now");
-    // Optionally reset form fields here
+      addPodcast(newPodcast);
+      // console.log("Toast should show now");
+      // Optionally reset form fields here
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   // Only allow podcast creation if all required fields are present (no fallback to customImage)
@@ -273,7 +282,7 @@ const CreatePodcast = () => {
           <label className="block text-zinc-300 mb-1">Description</label>
           <textarea
             className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-white focus:outline-none"
-            placeholder="Write a short description about the podcast"
+            placeholder="Write a short description about the podcast(max 10 Words)"
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={3}
@@ -334,8 +343,9 @@ const CreatePodcast = () => {
             type="button"
             className="bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition"
             onClick={() => imageInputRef.current?.click()}
+            disabled={isUploadingImage}
           >
-            Upload custom image
+            {isUploadingImage ? "Uploading..." : "Upload custom image"}
           </button>
           <input
             type="file"
@@ -361,10 +371,10 @@ const CreatePodcast = () => {
             <button
           type="button"
           className="w-full bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 rounded transition mt-4 disabled:opacity-50"
-          // disabled={!isFormComplete}
           onClick={handleSubmit}
+          disabled={isCreating /* || !isFormComplete */}
         >
-          Create Podcast
+          {isCreating ? "Creating Podcast..." : "Create Podcast"}
         </button>
              </div>
 
