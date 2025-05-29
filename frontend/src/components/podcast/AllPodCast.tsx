@@ -20,6 +20,8 @@ const AllPodCast = () => {
       prevAudioUrlRef.current = audioUrl;
     }
   };
+  //get all podcasts from the store
+  
 
   return (
     <div className="w-full mb-8 px-4">
