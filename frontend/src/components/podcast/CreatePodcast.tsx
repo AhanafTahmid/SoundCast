@@ -71,10 +71,13 @@ const CreatePodcast = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   let [aiAudioUrl, setAiAudioUrl] = useState<string | null>(null);
   const [aiThumbnailUrl, setAiThumbnailUrl] = useState<string | null>(null);
+  const [sampleAudioUrl, setSampleAudioUrl] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const sampleAudioRef = useRef<HTMLAudioElement>(null);
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
 
   const addPodcast = usePodcastStore((s) => s.addPodcast);
   const podcastList = usePodcastStore((s) => s.podcastList);
@@ -243,6 +246,30 @@ const CreatePodcast = () => {
     }
   }, [aiAudioUrl]);
 
+  React.useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!hasMounted) return; // Don't run on initial mount
+    if (!aiVoice) return;
+    // Generate sample audio for preview when voice changes (background, no autoplay)
+    const fetchSample = async () => {
+      try {
+        const res = await axios.post("http://localhost:5000/api/podcast/generate", {
+          text: "Hello, I was built by ahanaf. Select me if you like my voice",
+          model: 'playai-tts',
+          voice: aiVoice,
+          description: "Sample audio preview",
+        });
+        setSampleAudioUrl(res.data.audioUrl);
+      } catch (err) {
+        setSampleAudioUrl(null);
+      }
+    };
+    fetchSample();
+  }, [aiVoice, hasMounted]);
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] overflow-y-auto">
       <form
@@ -299,6 +326,35 @@ const CreatePodcast = () => {
               <option key={voice.value} value={voice.value}>{voice.label}</option>
             ))}
           </select>
+          <button
+            type="button"
+            className="mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
+            onClick={async () => {
+              // Generate a new sample audio with the text 'Hello I am best' for the selected voice
+              try {
+                const res = await axios.post("http://localhost:5000/api/podcast/generate", {
+                  model: 'playai-tts',
+                  voice: aiVoice,
+                  text: "Hello I was added by ahanaf. Select me if you like my voice",
+                  response_format: "wav"
+                  //description: "Sample audio preview",
+                });
+                setSampleAudioUrl(res.data.audioUrl);
+                // Play the new sample audio after it loads
+                setTimeout(() => {
+                  if (sampleAudioRef.current) {
+                    sampleAudioRef.current.currentTime = 0;
+                    sampleAudioRef.current.play();
+                  }
+                }, 200);
+              } catch (err) {
+                setSampleAudioUrl(null);
+              }
+            }}
+            //disabled={!aiVoice}
+          >
+            Hear me
+          </button>
         </div>
         <div className="mb-4">
           <label className="block text-zinc-300 mb-1">AI prompt to generate podcast</label>
@@ -378,7 +434,10 @@ const CreatePodcast = () => {
         </button>
              </div>
 
-
+             {/* Sample audio preview */}
+             {sampleAudioUrl && (
+              <audio ref={sampleAudioRef} controls src={sampleAudioUrl} className="mt-2 w-full" style={{ display: 'none' }} />
+            )}
       </form>
 
     </div>
