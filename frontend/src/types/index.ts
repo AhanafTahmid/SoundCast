@@ -41,3 +41,13 @@ export interface User {
 	fullName: string;
 	imageUrl: string;
 }
+
+export interface Podcast {
+	title: string;
+	category: string;
+	description: string;
+	audioUrl: string;
+	thumbnailUrl: string;
+	createdAt: string;
+	updatedAt: string;
+}
