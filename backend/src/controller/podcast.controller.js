@@ -1,5 +1,3 @@
-//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
-
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import fs from "fs";
