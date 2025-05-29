@@ -168,14 +168,14 @@ export const createPodcast = async (req, res, next) => {
   //console.log("Files in request:", req.files.imageFile);
 
   try {
-    const { userName, title, category, description, aiVoice, aiPodcastPrompt, aiThumbnailPrompt, aiThumbnailURL, imageFile, audiourl, audioFile } = req.body;
+    const { userName, title, category, description, aiVoice, aiPodcastPrompt, aiThumbnailPrompt, aiThumbnailURL, audiourl } = req.body;
       //console.log(aiThumbnailURL);
      //const image = req.files.imageFile;
     //  console.log("Files in request:", req.files);
     //  console.log("Files in request:", aiThumbnailPrompt);
     //  console.log("Files in request:", audioFile);
-    
-    if (!userName || !title || !category || !description || !aiVoice || !aiPodcastPrompt || !(aiThumbnailURL || imageFile) || !audiourl) {
+
+    if (!userName || !title || !category || !description || !aiVoice || !aiPodcastPrompt || !aiThumbnailURL || !audiourl) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -187,13 +187,16 @@ export const createPodcast = async (req, res, next) => {
     // }
 
     // // Upload audio and image to Cloudinary
-    console.log(aiThumbnailURL);
-    const audioUrl = "";
+    // console.log(aiThumbnailURL);
+    // console.log(req.files.imageFile);
     //const audioUrl = await uploadToCloudinary(req.files.audioFile);
-    const thumbnailUrl = await uploadToCloudinaryIMG(aiThumbnailURL || req.files.imageFile);
-
-    // Create podcast documeant in MongoDB
-    
+    const uploadResult = await uploadToCloudinaryIMG(aiThumbnailURL);
+    const thumbnailUrl = uploadResult.secure_url;
+    // audioUrl: must be provided from frontend (Cloudinary URL)
+    const audioUrl = audiourl;
+    // aiThumbnailPrompt: must be provided from frontend
+    const aiThumbnailPromptValue = aiThumbnailPrompt || "AI generated";
+    // Create podcast document in MongoDB
     const podcast = new Podcast({
       userName,
       title,
@@ -201,7 +204,7 @@ export const createPodcast = async (req, res, next) => {
       description,
       aiVoice,
       aiPodcastPrompt,
-      aiThumbnailPrompt,
+      aiThumbnailPrompt: aiThumbnailPromptValue,
       audioUrl,
       thumbnailUrl
     });
@@ -215,7 +218,7 @@ export const createPodcast = async (req, res, next) => {
 
 export const getAllPodcasts = async (req, res, next) => {
   try {
-    const podcasts = await Podcast.find().populate('userId', 'name email');
+    const podcasts = await Podcast.find().populate('userName', 'name email');
     res.json(podcasts);
   } catch (error) {
     next(error);

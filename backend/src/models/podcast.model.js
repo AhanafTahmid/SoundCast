@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const podcastSchema = new mongoose.Schema({
-        userId: {
+        userName: {
             type: String,
             ref: 'User',
             required: true,

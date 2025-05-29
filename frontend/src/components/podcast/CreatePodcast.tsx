@@ -185,7 +185,9 @@ const CreatePodcast = () => {
     formData.append("aiVoice", aiVoice);
     formData.append("aiPodcastPrompt", aiPrompt);
     formData.append("aiThumbnailPrompt", thumbnailPrompt);
-    formData.append("aiThumbnailURL", aiThumbnailUrl!); // Always a Cloudinary URL now
+    
+    // It is both aithumbnailUrl and customImage, but we only use aiThumbnailUrl now
+    formData.append("aiThumbnailURL", aiThumbnailUrl!); // Always a Cloudinary URL now, aiThumbnailUrl is set after image upload
     // Don't send customImage, only send aiThumbnailUrl (Cloudinary URL)
     formData.append("audiourl", aiAudioUrl!); // Always a Cloudinary URL
     // Don't send audioFile, only send aiAudioUrl (Cloudinary URL)
