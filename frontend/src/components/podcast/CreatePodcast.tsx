@@ -134,7 +134,7 @@ const CreatePodcast = () => {
       const fileName = audioUrl.split('/').pop() || 'ai-audio.wav';
       const file = new File([audioBlob], fileName, { type: audioBlob.type });
       setAudioFile(file);
-      toast.success("Podcast audio generated and ready for upload!");
+      toast.success("Podcast Audio generated!");
     } catch (err) {
       console.log(err);
       toast.error("Failed to generate podcast audio");
