@@ -1,5 +1,10 @@
 # SoundCast
+
+## Live URL
+https://soundcast.onrender.com
+
 ## Demo
+Youtube Demo: 
 
 ## Setup
 1. git clone https://github.com/AhanafTahmid/SoundCast.git
