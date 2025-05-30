@@ -91,8 +91,8 @@ const CreatePodcast = () => {
       formData.append("imageFile", file);
       setIsUploadingImage(true);
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-        const res = await axios.post(`${API_BASE_URL}/api/podcast/upload-image`, formData, {
+        // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+        const res = await axios.post(`/api/podcast/upload-image`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Image uploaded successfully!");
@@ -120,8 +120,8 @@ const CreatePodcast = () => {
     setAiAudioUrl(null);
     setAudioFile(null); // Reset audio file before generating
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-      const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
+      // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+      const res = await axios.post(`/api/podcast/generate`, {
         text: aiPrompt,
         model: 'playai-tts',
         voice: aiVoice,
@@ -151,8 +151,8 @@ const CreatePodcast = () => {
     setGeneratingThumbnail(true);
     setAiThumbnailUrl(null);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-      const res = await axios.post(`${API_BASE_URL}/api/podcast/thumbnail`, {
+      // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+      const res = await axios.post(`/api/podcast/thumbnail`, {
           prompt: thumbnailPrompt
       });
       setAiThumbnailUrl(res.data.imageUrl); // Your backend should return a URL or base64 image
@@ -210,8 +210,8 @@ const CreatePodcast = () => {
 
     setIsCreating(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-      await axios.post(`${API_BASE_URL}/api/podcast/create`, formData, {
+      // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+      await axios.post(`/api/podcast/create`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -260,8 +260,8 @@ const CreatePodcast = () => {
     // Generate sample audio for preview when voice changes (background, no autoplay)
     const fetchSample = async () => {
       try {
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-        const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
+        // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+        const res = await axios.post(`/api/podcast/generate`, {
           text: "Hello, I was built by ahanaf. Select me if you like my voice",
           model: 'playai-tts',
           voice: aiVoice,
@@ -337,8 +337,8 @@ const CreatePodcast = () => {
             onClick={async () => {
               // Generate a new sample audio with the text 'Hello I am best' for the selected voice
               try {
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
+                // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+                const res = await axios.post(`/api/podcast/generate`, {
                   model: 'playai-tts',
                   voice: aiVoice,
                   text: "Hello I was added by ahanaf. Select me if you like my voice",

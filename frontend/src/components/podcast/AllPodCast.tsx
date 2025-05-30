@@ -14,8 +14,8 @@ const AllPodCast = () => {
     const fetchPodcasts = async () => {
       try {
         //console.log("Fetching podcasts...", import.meta.env.VITE_API_BASE_URL);
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-        const res = await axios.get(`${API_BASE_URL}/api/podcast/all-podcasts`);
+        //const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+        const res = await axios.get(`/api/podcast/all-podcasts`);
         const podcasts = res.data.reverse();
         setLocalPodcasts(podcasts);
         setPodcastQueue(podcasts);
