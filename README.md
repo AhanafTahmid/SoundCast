@@ -17,6 +17,7 @@ VITE_CLERK_PUBLISHABLE_KEY =
  
 Backend env:  
 PORT =  
+BASEE_URL(Website's URL After Hosting)=  
 MONGODB_URI =  
 ADMIN_EMAIL =  
 ClOUDINARY_API_KEY =  
@@ -33,3 +34,4 @@ NEBIUS_API_KEY =
 ## Tools Used
 For Text to audio Generation : [GROQ](https://console.groq.com/docs/text-to-speech)  
 For Text to image Generation : [NEBIUS](https://studio.nebius.com/?modality=text2image)
+
