@@ -1,76 +1,91 @@
-import express, { Router } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
-import userRouters from './routes/user.route.js'
-import authRouters from './routes/auth.route.js'
-import adminRouters from './routes/admin.route.js'
-import songRouters from './routes/song.route.js'
-import albumRouters from './routes/album.route.js'
-import startRouters from './routes/stat.route.js'
-import { connectDB } from './lib/db.js';
-import { clerkMiddleware } from '@clerk/express'
-import fileupload from 'express-fileupload'
+import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import cors from 'cors'
+import { fileURLToPath } from 'url';
 import { createServer } from 'http';
-import { initializeSocket } from  './lib/socket.js'
-import Generate from './routes/podcast.route.js'
+import fileUpload from 'express-fileupload';
+import { clerkMiddleware } from '@clerk/express';
 
+// Internal Imports
+import { connectDB } from './lib/db.js';
+import { initializeSocket } from './lib/socket.js';
+
+// Routes
+import userRouters from './routes/user.route.js';
+import authRouters from './routes/auth.route.js';
+import adminRouters from './routes/admin.route.js';
+import songRouters from './routes/song.route.js';
+import albumRouters from './routes/album.route.js';
+import startRouters from './routes/stat.route.js';
+import podcastRouters from './routes/podcast.route.js';
+import audioRoutes from './routes/audioRoutes.js';
+
+// Setup __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
 dotenv.config();
-const __dirname = path.resolve();
+
 const app = express();
-app.use(express.json()); // to parse req.body
-app.use(clerkMiddleware()) //this will add to auth to req object => req.auth.userId
-app.use(fileupload(
-    {useTempFiles: true,
-        tempFileDir: path.join(__dirname,'tmp'),
-        createParentPath: true,
-        limits:{
-            fileSize: 10*1024*1024 //10mb max file size 
-        }
-    }
+const PORT = process.env.PORT || 8000;
 
-))
-
-const PORT = process.env.PORT
-
+// Create HTTP server
 const httpServer = createServer(app);
-initializeSocket(httpServer);
 
+// Middleware
 app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials:true
-}))
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 
-app.use("/api/users", userRouters);
-app.use("/api/auth",authRouters);
-app.use("/api/admin",adminRouters);
-app.use("/api/songs",songRouters);
-app.use("/api/albums",albumRouters);
-app.use("/api/stats",startRouters)
+app.use(express.json()); // For parsing application/json
+app.use(clerkMiddleware()); // Clerk authentication
 
-//podcast creating by ahanaf
-app.use("/api/podcast", Generate);
+// File upload middleware
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: path.join(__dirname, 'tmp'),
+  createParentPath: true,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+}));
 
-// Ensure podcastFiles directory exists at startup
-// const tmpDir = path.join(__dirname, 'podcastFiles');
-// if (!fs.existsSync(tmpDir)) {
-//     fs.mkdirSync(tmpDir);
-// }
+// Routes
+app.use('/api/users', userRouters);
+app.use('/api/auth', authRouters);
+app.use('/api/admin', adminRouters);
+app.use('/api/songs', songRouters);
+app.use('/api/albums', albumRouters);
+app.use('/api/stats', startRouters);
+app.use('/api/podcast', podcastRouters);
+app.use('/api/audio', audioRoutes);
 
-// // Serve static files from tmp directory for audio playback
-// app.use('/podcastFiles', express.static(tmpDir));
-// app.use('/podcastImages', express.static(tmpDir));
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// error handling
+// (Optional) Setup podcast media file serving
+// const podcastDir = path.join(__dirname, 'podcastFiles');
+// if (!fs.existsSync(podcastDir)) fs.mkdirSync(podcastDir);
+// app.use('/podcastFiles', express.static(podcastDir));
+// app.use('/podcastImages', express.static(podcastDir));
+
+// Global Error Handler
 app.use((err, req, res, next) => {
-    //console.log(err);
-    res.status(500).json({message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message});
+  console.error(err);
+  res.status(500).json({
+    message: process.env.NODE_ENV === 'production'
+      ? 'Internal server error'
+      : err.message,
+  });
 });
 
-httpServer.listen(PORT,() => {
-    console.log('Server is running on port',PORT);
-    connectDB();
-})
-
-// todo socket io
+// Start the server
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  connectDB();
+  initializeSocket(httpServer);
+});
