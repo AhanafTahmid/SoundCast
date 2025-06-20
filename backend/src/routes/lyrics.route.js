@@ -1,57 +1,41 @@
-// import React, { useState } from 'react';
-// import axios from 'axios';
-// import { Sparkles } from 'lucide-react';
+import express from "express";
+import dotenv from "dotenv";
+import fetch from "node-fetch";
 
-// const LyricsGenerator = () => {
-//   const [prompt, setPrompt] = useState('');
-//   const [lyrics, setLyrics] = useState('');
-//   const [loading, setLoading] = useState(false);
+dotenv.config();
+const router = express.Router();
 
-//   const handleGenerate = async () => {
-//     if (!prompt.trim()) return;
-//     setLoading(true);
-//     try {
-//       const res = await axios.post('/api/generate-lyrics', { prompt });
-//       setLyrics(res.data.lyrics);
-//     } catch (err) {
-//       console.error(err);
-//       setLyrics('❌ Failed to generate lyrics.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+router.post("/", async (req, res) => {
+  const { mood, language } = req.body;
 
-//   return (
-//     <div className="max-w-3xl mx-auto mt-10 p-6 bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl border border-blue-100">
-//       <div className="flex items-center gap-2 mb-6">
-//         <Sparkles className="text-blue-500 w-6 h-6" />
-//         <h2 className="text-2xl font-semibold text-blue-800">AI Lyrics Generator</h2>
-//       </div>
+  const prompt =
+    language === "bn"
+      ? `একটি ${mood} অনুভূতির উপর ভিত্তি করে একটি আবেগময় বাংলা গানের লিরিকস লেখো।`
+      : `Write an emotional song lyric in English based on the mood: ${mood}`;
 
-//       <input
-//         type="text"
-//         className="w-full p-3 text-lg border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 mb-6"
-//         placeholder="e.g. Uplifting pop song about summer love"
-//         value={prompt}
-//         onChange={(e) => setPrompt(e.target.value)}
-//       />
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
 
-//       <button
-//         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-lg font-medium transition-all duration-300 disabled:opacity-50"
-//         onClick={handleGenerate}
-//         disabled={loading}
-//       >
-//         {loading ? '🎤 Generating...' : '🎵 Generate Lyrics'}
-//       </button>
+    const result = await response.json();
 
-//       {lyrics && (
-//         <div className="mt-8 p-5 bg-white border-2 border-blue-200 rounded-xl shadow-inner text-gray-800 whitespace-pre-wrap">
-//           <h3 className="text-lg font-bold text-blue-600 mb-2">Your Lyrics:</h3>
-//           {lyrics}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
+    const lyrics =
+      result.candidates?.[0]?.content?.parts?.[0]?.text || "No lyrics generated.";
+    res.json({ lyrics });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to generate lyrics using Gemini REST." });
+  }
+});
 
-// export default LyricsGenerator;
+export default router;

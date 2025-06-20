@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { SignedIn } from "@clerk/clerk-react";
-import { Headset, HomeIcon, Library, MessageCircle, Mic } from "lucide-react";
+import { Headset, HomeIcon, Library, MessageCircle, Mic,FileText } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -36,34 +36,55 @@ const LeftSidebar = () => {
 				</Link>
 
 				<SignedIn>
-					<Link to={"/chat"}
-					  className={cn(
-					  buttonVariants({
-						variant: "ghost",
-						className: "w-full justify-start text-white hover:bg-zinc-800",
-						})
-					)}
-					>
-					 <MessageCircle className='mr-2 size-5' />
-					 <span className='hidden md:inline'>Messages</span>
-					</Link>
+	<Link to={"/chat"}
+		className={cn(
+			buttonVariants({
+				variant: "ghost",
+				className: "w-full justify-start text-white hover:bg-zinc-800",
+			})
+		)}
+	>
+		<MessageCircle className='mr-2 size-5' />
+		<span className='hidden md:inline'>Messages</span>
+	</Link>
 
-
-					<Link to={"/create"}
-					  className={cn(
-					  buttonVariants({
-						variant: "ghost",
-						className: "w-full justify-start text-white hover:bg-zinc-800",
-						})
-					)}
-					>
-					 <Mic className='mr-2 size-5' />
-					 <span className='hidden md:inline'>Create Podcast</span>
-					</Link>
-					
-				</SignedIn>
-
-				<Link to={"/all-podcasts"}
+	<Link to={"/create"}
+		className={cn(
+			buttonVariants({
+				variant: "ghost",
+				className: "w-full justify-start text-white hover:bg-zinc-800",
+			})
+		)}
+	>
+		<Mic className='mr-2 size-5' />
+		<span className='hidden md:inline'>Create Podcast</span>
+	</Link>
+	<Link
+		to={"/my-podcasts"}
+		className={cn(
+			buttonVariants({
+				variant: "ghost",
+				className: "w-full justify-start text-white hover:bg-zinc-800",
+			})
+		)}
+	>
+		<Headset className='mr-2 size-5' />
+		<span className='hidden md:inline'>My Podcasts</span>
+	</Link>
+	{/* ✅ NEW: Lyrics link */}
+	<Link to={"/lyricify"}
+		className={cn(
+			buttonVariants({
+				variant: "ghost",
+				className: "w-full justify-start text-white hover:bg-zinc-800",
+			})
+		)}
+	>
+		<FileText className='mr-2 size-5' />
+		<span className='hidden md:inline'>Create Lyrics</span>
+	</Link>
+</SignedIn>
+		<Link to={"/all-podcasts"}
 					  className={cn(
 					  buttonVariants({
 						variant: "ghost",

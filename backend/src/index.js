@@ -21,6 +21,7 @@ import albumRouters from './routes/album.route.js';
 import startRouters from './routes/stat.route.js';
 import podcastRouters from './routes/podcast.route.js';
 import audioRoutes from './routes/audioRoutes.js';
+import lyricRouters from './routes/lyrics.route.js';
 
 // Setup __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -63,6 +64,7 @@ app.use('/api/albums', albumRouters);
 app.use('/api/stats', startRouters);
 app.use('/api/podcast', podcastRouters);
 app.use('/api/audio', audioRoutes);
+app.use("/api/lyrics", lyricRouters);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -82,6 +84,7 @@ app.use((err, req, res, next) => {
       : err.message,
   });
 });
+
 
 // Start the server
 httpServer.listen(PORT, () => {

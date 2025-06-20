@@ -8,13 +8,13 @@ import AlbumPage from "./pages/album/AlbumPage";
 import AdminPage from "./pages/Admin/AdminPage";
 import CreatePodcast from "./components/podcast/CreatePodcast";
 import AllPodCast from "./components/podcast/AllPodCast";
-import Lyricify from './pages/Lyricify/Lyricify.jsx';
 
 
 import { Toaster } from "react-hot-toast";
 import NotFoundPage from "./pages/404/NotFoundPage";
 import VoiceRecorder from "./components/VoiceRecorder.js";
 import VoiceRecorderPage from "./pages/VoiceRecorder/VoiceRecorderPage.js";
+import Lyricify from "./components/LyricsChat.js";
 
 function App() {
 	return (
