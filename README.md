@@ -14,7 +14,8 @@ Youtube Demo:
    
 Frontend env:  
 VITE_CLERK_PUBLISHABLE_KEY =  
- 
+BASEE_URL(Website's URL After Hosting)= 
+
 Backend env:  
 PORT =  
 BASEE_URL(Website's URL After Hosting)=  
@@ -30,6 +31,7 @@ CLERK_SECRET_KEY =
 OPENAI_API_KEY =  
 GROQ_API_KEY =  
 NEBIUS_API_KEY =  
+GEMINI_API_KEY =
 
 ## Tools Used
 For Text to audio Generation : [GROQ](https://console.groq.com/docs/text-to-speech)  
