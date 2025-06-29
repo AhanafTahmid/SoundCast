@@ -274,6 +274,7 @@ const CreatePodcast = () => {
     };
     fetchSample();
   }, [aiVoice, hasMounted]);
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] overflow-y-auto">
@@ -299,7 +300,36 @@ const CreatePodcast = () => {
             <select
               className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-zinc-400 focus:outline-none max-h-40 overflow-y-auto"
               value={category}
-              onChange={e => setCategory(e.target.value)}
+              onChange={
+                
+                      async (e) => {
+                      const selectedCategory = e.target.value;
+                      setCategory(selectedCategory);
+
+                      if (!selectedCategory) return;
+                     
+
+                      try {
+                        setLoading(true);
+                        //const API_BASE_URL = import.meta.env.BASEE_URL || "http://localhost:5000";
+                        const API_BASE_URL = "http://localhost:5000";
+                         
+                        // Request Gemini to generate description based on category
+                        const res = await axios.post(`${API_BASE_URL}/api/podcast/description`, {
+                          category: selectedCategory
+                        });
+                        // console.log("Sending category:", res.data.description);
+                        //console.log("Sending category:", res.data.description);
+                        setAiPrompt(res.data.aiprompthere|| 'No Prompt');
+
+                        setDescription(res.data.description || "No description generated.");
+                      } catch (err) {
+                        setDescription("Failed to generate description.");
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+              }
               size={1}
               style={{ maxHeight: 160, overflowY: 'auto' }}
             >
@@ -309,7 +339,38 @@ const CreatePodcast = () => {
               ))}
             </select>
           </div>
+
+          {loading ? (
+        <p className="mt-2 text-zinc-400">Generating Description
+        <span className="dot-animation ml-1"></span>
+        </p>
+      ) : null}
+      <style>{`
+    .dot-animation::after {
+      content: '';
+      display: inline-block;
+      animation: dots 1.4s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0% {
+        content: '';
+      }
+      33% {
+        content: '.';
+      }
+      66% {
+        content: '..';
+      }
+      100% {
+        content: '...';
+      }
+    }
+  `}</style>
+
+
         </div>
+        
         <div className="mb-4">
           <label className="block text-zinc-300 mb-1">Description</label>
           <textarea
@@ -362,8 +423,40 @@ const CreatePodcast = () => {
             Hear me
           </button>
         </div>
+
+        {loading ? (
+        <p className="mt-2 text-zinc-400">Generating AI Prompt
+        <span className="dot-animation ml-1"></span>
+        </p>
+      ) : null}
+      <style>{`
+    .dot-animation::after {
+      content: '';
+      display: inline-block;
+      animation: dots 1.4s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0% {
+        content: '';
+      }
+      33% {
+        content: '.';
+      }
+      66% {
+        content: '..';
+      }
+      100% {
+        content: '...';
+      }
+    }
+  `}</style>
+
+
         <div className="mb-4">
           <label className="block text-zinc-300 mb-1">AI prompt to generate podcast</label>
+
+          
           <div className="flex gap-2">
             <textarea
               className="flex-1 bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-white focus:outline-none"

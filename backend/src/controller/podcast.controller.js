@@ -5,6 +5,7 @@ import path from "path";
 import Groq from 'groq-sdk';
 import { Podcast } from "../models/podcast.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -17,6 +18,8 @@ const nebius = new OpenAI({
   baseURL: "https://api.studio.nebius.com/v1/",
   apiKey: process.env.NEBIUS_API_KEY,
 });
+
+const gemini = new GoogleGenAI({});
 
 // helper function to upload files to cloudinary 
 const uploadToCloudinary = async (file) => {
@@ -156,6 +159,29 @@ export const generatePodcastAudio = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+
+
+export const generatePodcastText = async (req, res) => {
+  const { category } = req.body;
+  //console.log(req.body)
+  const prompt = `Generate a 30 word interesting fact for the category: ${category}`;
+  if (!category) {
+    return res.status(400).json({ message: "Category is required" });
+  }
+  const response = await gemini.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+
+  const description = await gemini.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `Generate a 8 word description based on those content: ${response.text}`,
+  });
+  console.log(response.text);
+  console.log(description.text);
+  res.json({ description: description.text, aiprompthere: response.text });
 };
 
 
