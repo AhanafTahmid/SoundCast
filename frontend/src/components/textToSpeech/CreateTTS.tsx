@@ -73,6 +73,11 @@ const CreateTTS = () => {
     handleGenerate,
   } = useGeneratedScript()
 
+  const [scriptText, setScriptText] = useState<string>("")
+  const handleUseScript = () => {
+    setScriptText(generatedScript);
+    setShowScriptModal(false);
+  };
 
 
   const [ttsTitle, setTTSTitle] = useState("");
@@ -287,30 +292,6 @@ const CreateTTS = () => {
 
   const [showScriptModal, setShowScriptModal] = useState(false);
 
-  const handleGenerateTTSText = async () => {
-    if (!category) {
-      toast.error("Please select a category first");
-      return;
-    }
-    setGeneratingAudio(true);
-    //CreateScriptModal();
-    return;
-
-    try {
-      const res = await axios.post(`${API_BASE_URL}/api/tts/description`, {
-        category,
-      });
-      setAiPrompt(res.data.aiprompthere || 'No Prompt');
-      setDescription(res.data.description || "No description generated.");
-      toast.success("TTS text generated successfully!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to generate TTS text");
-    } finally {
-      setGeneratingAudio(false);
-    }
-  };
-
 
 
   return (
@@ -343,19 +324,24 @@ const CreateTTS = () => {
                       const selectedCategory = e.target.value;
                       setCategory(selectedCategory);
 
-                      if (!selectedCategory) return;
-                     
+                      if (!selectedCategory || !ttsTitle){
+                        toast.error("Please select a Title and a category before.");
+                        return;
+                      }
 
                       try {
                         setLoading(true);
+                        
+
                         // Request Gemini to generate description based on category
                         const res = await axios.post(`${API_BASE_URL}/api/tts/description`, {
+                          ttsTitle: ttsTitle,
                           category: selectedCategory
                         });
                         // console.log("Sending category:", res.data.description);
                         //console.log("Sending category:", res.data.description);
-
                         setDescription(res.data.description || "No description generated.");
+                        
                       } catch (err) {
                         setDescription("Failed to generate description.");
                       } finally {
@@ -456,7 +442,7 @@ const CreateTTS = () => {
           </button>
         </div>
 
-        {loading ? (
+        {/* {loading ? (
         <p className="mt-2 text-zinc-400">Generating AI Prompt
         <span className="dot-animation ml-1"></span>
         </p>
@@ -482,26 +468,29 @@ const CreateTTS = () => {
         content: '...';
       }
     }
-  `}</style>
+  `}</style> */}
 
         
-         <div className="flex justify-between">
+         <div className="flex justify-between mb-3">
            <label className="text-zinc-300 mt-3">Enter TTS Script</label>
             <button
               type="button"
-              className="bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition min-w-[120px] mb-3"
               onClick={() => setShowScriptModal(true)}
             >
-              Generate Script Using AI
-            </button>
-{showScriptModal && ( <CreateScriptModal 
+              
+              <CreateScriptModal 
         givenAiPrompt={givenAiPrompt}
         setGivenAiPrompt={setGivenAiPrompt}
         generatedScript={generatedScript}
         setGeneratedScript={setGeneratedScript}
         loadingScript={loadingScript}
         handleGenerate={handleGenerate}
-        />)} 
+        onUse={handleUseScript}
+        onCancel={() => setGeneratedScript("")}  
+        />
+        
+            </button>
+{/* {showScriptModal && ( )}  */}
             
             
           </div>
@@ -517,8 +506,8 @@ const CreateTTS = () => {
             <textarea
               className="flex-1 bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-white focus:outline-none"
               placeholder="Provide text to AI to generate audio"
-              value={generatedScript}
-              onChange={e => setGeneratedScript(e.target.value)}
+              value={scriptText}
+              onChange={e => setScriptText(e.target.value)}
               rows={3}
             />
           </div>
@@ -529,7 +518,7 @@ const CreateTTS = () => {
               type="button"
               className="bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition min-w-[120px]"
               onClick={handleGenerateTTS}
-              disabled={generatingAudio || !generatedScript}
+              disabled={generatingAudio || !scriptText}
             >
               {generatingAudio ? "Generating..." : "Generate TTS"}
             </button>

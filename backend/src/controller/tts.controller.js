@@ -164,17 +164,18 @@ export const generateTTSAudio = async (req, res, next) => {
 
 
 export const generateTTSText = async (req, res) => {
-  const { category } = req.body;
+  const { category, ttsTitle } = req.body;
   //console.log(req.body)
-  if (!category) {
-    return res.status(400).json({ message: "Category is required" });
+  if (!category || !ttsTitle) {
+    return res.status(400).json({ message: "Both Name and Category is required" });
   }
   const description = await gemini.models.generateContent({
     model: "gemini-2.5-flash",
     contents: `Generate a 8 word description based on those content: ${category}`,
   });
+  console.log(ttsTitle);
   console.log(description.text);
-  res.json({ description: description.text });
+  res.json({ description: description.text, ttsTitle });
 };
 
 export const generateTTSScript = async (req, res) => {
