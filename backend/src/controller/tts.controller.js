@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import Groq from 'groq-sdk';
-import { Podcast } from "../models/podcast.model.js";
+import { TTS } from "../models/tts.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { GoogleGenAI } from "@google/genai";
 
@@ -66,18 +66,18 @@ export const uploadToCloudinaryIMG = async (imageUrl, folder = "images") => {
 };
 
 
-// Generate podcast audio (returns text or audio URL)
-export const generatePodcast = async (req, res, next) => {
+// Generate TTS audio (returns text or audio URL)
+export const generateTTS = async (req, res, next) => {
   try {
     const { prompt, model, title, description } = req.body;
     if (!prompt || !model) {
       return res.status(400).json({ message: "Prompt and model are required" });
     }
-    // Generate podcast script using OpenAI
+    // Generate TTS script using OpenAI
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: `You are a helpful podcast script generator. Title: ${title || "Untitled"}. Description: ${description || ""}` },
+        { role: "system", content: `You are a helpful TTS script generator. Title: ${title || "Untitled"}. Description: ${description || ""}` },
         { role: "user", content: prompt },
       ],
       max_tokens: 1200,
@@ -91,7 +91,7 @@ export const generatePodcast = async (req, res, next) => {
   }
 };
 
-// Generate podcast thumbnail (returns image URL or base64)
+// Generate TTS thumbnail (returns image URL or base64)
 //https://youtu.be/pb_jYgSqGh0
 export const generateThumbnail = async (req, res, next) => {
   try {
@@ -126,9 +126,9 @@ export const generateThumbnail = async (req, res, next) => {
   }
 };
 
-// Generate podcast audio using Groq TTS
+// Generate TTS audio using Groq TTS
 //https://console.groq.com/docs/text-to-speech
-export const generatePodcastAudio = async (req, res, next) => {
+export const generateTTSAudio = async (req, res, next) => {
   try {
     const { text, model = "playai-tts", voice = "Fritz-PlayAI", responseFormat = "wav" } = req.body;
     if (!text) {
@@ -163,43 +163,51 @@ export const generatePodcastAudio = async (req, res, next) => {
 
 
 
-export const generatePodcastText = async (req, res) => {
+export const generateTTSText = async (req, res) => {
   const { category } = req.body;
   //console.log(req.body)
-  const prompt = `Generate a 30 word interesting fact for the category: ${category}`;
   if (!category) {
     return res.status(400).json({ message: "Category is required" });
   }
-  const response = await gemini.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-  });
-
   const description = await gemini.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `Generate a 8 word description based on those content: ${response.text}`,
+    contents: `Generate a 8 word description based on those content: ${category}`,
   });
-  console.log(response.text);
   console.log(description.text);
-  res.json({ description: description.text, aiprompthere: response.text });
+  res.json({ description: description.text });
 };
 
+export const generateTTSScript = async (req, res) => {
+  console.log("Generating TTS script with body:", req.body);
+    const { givenAiPrompt } = req.body;
+    const prompt = `Generate a 30 word interesting fact for the prompt: ${givenAiPrompt}`;
+    if (!givenAiPrompt) {
+      return res.status(400).json({ message: "Prompt is required" });
+    }
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
 
-export const createPodcast = async (req, res, next) => {
-  //console.log("Creating podcast with body:", req.body);
-  //console.log("Creating podcast with body:", req.body);
+    res.json({ scriptDescription: response.text });
+}
+
+
+export const createTTS = async (req, res, next) => {
+  //console.log("Creating TTS with body:", req.body);
+  //console.log("Creating TTS with body:", req.body);
  
   //console.log("Files in request:", req.files.imageFile);
 
   try {
-    const { userName, title, category, description, aiVoice, aiPodcastPrompt, aiThumbnailPrompt, aiThumbnailURL, audiourl } = req.body;
+    const { userName, title, category, description, aiVoice, aiTTSPrompt, aiThumbnailPrompt, aiThumbnailURL, audiourl } = req.body;
       //console.log(aiThumbnailURL);
      //const image = req.files.imageFile;
     //  console.log("Files in request:", req.files);
     //  console.log("Files in request:", aiThumbnailPrompt);
     //  console.log("Files in request:", audioFile);
 
-    if (!userName || !title || !category || !description || !aiVoice || !aiPodcastPrompt || !aiThumbnailURL || !audiourl) {
+    if (!userName || !title || !category || !description || !aiVoice || !aiTTSPrompt || !aiThumbnailURL || !audiourl) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -219,33 +227,33 @@ export const createPodcast = async (req, res, next) => {
     // audioUrl: must be provided from frontend (Cloudinary URL)
     const audioUrl = audiourl;
     // aiThumbnailPrompt: must be provided from frontend
-    // Create podcast document in MongoDB
-    const podcast = new Podcast({
+    // Create TTS document in MongoDB
+    const tts = new TTS({
       userName,
       title,
       category,
       description,
       aiVoice,
-      aiPodcastPrompt,
+      aiTTSPrompt,
       aiThumbnailPrompt,
       audioUrl,
       thumbnailUrl
     });
-    await podcast.save();
-    res.status(201).json({ message: "Created podcast successfully", podcast });
+    await tts.save();
+    res.status(201).json({ message: "Created TTS Successfully", tts });
   } catch (error) {
-    console.error("Error creating podcast:", error);
+    console.error("Error creating TTS:", error);
     next(error);
   }
 };
 
-export const getAllPodcasts = async (req, res, next) => {
-  //find all podcast by users
+export const getAllTTS = async (req, res, next) => {
+  //find all TTS by users
   try {
-    const podcasts = await Podcast.find().sort({ createdAt: -1 });
-    res.status(200).json(podcasts);
+    const tts = await TTS.find().sort({ createdAt: -1 });
+    res.status(200).json(tts);
   } catch (error) {
-    console.error("Error fetching podcasts:", error);
+    console.error("Error fetching TTS:", error);
     next(error);
   }
 };
