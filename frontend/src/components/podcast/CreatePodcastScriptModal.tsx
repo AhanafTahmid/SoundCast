@@ -42,10 +42,10 @@ export function CreateScriptModal(
   const [lastPrompt, setLastPrompt] = useState<string>("")
 
   // wrap the passed‐in handleGenerate so we can record the prompt when it completes
-  const onGenerateClick = async () => {
-    await handleGenerate()
-    setLastPrompt(givenAiPrompt)
-  }
+  // const onGenerateClick = async () => {
+  //   await handleGenerate()
+  //   setLastPrompt(givenAiPrompt)
+  // }
 
   // decide what the trigger should say
   const baseLabel =
