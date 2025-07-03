@@ -37,3 +37,6 @@ GEMINI_API_KEY =
 For Text to audio Generation : [GROQ](https://console.groq.com/docs/text-to-speech)  
 For Text to image Generation : [NEBIUS](https://studio.nebius.com/?modality=text2image)
 
+
+# Challenges
+- Adding podcast for multiple voices

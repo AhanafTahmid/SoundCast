@@ -23,6 +23,10 @@ const podcastSchema = new mongoose.Schema({
             type: String,
             required: true,
         },
+        aiGuestVoice: {
+            type: String,
+            required: true,
+        },
         aiPodcastPrompt: {
             type: String,
             required: true,

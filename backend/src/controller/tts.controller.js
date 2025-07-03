@@ -171,7 +171,7 @@ export const generateTTSText = async (req, res) => {
   }
   const description = await gemini.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `Generate a 8 word description based on those content: ${category}`,
+    contents: `Generate a 8 word description based on those content: ${ttsTitle} and ${category}`,
   });
   console.log(ttsTitle);
   console.log(description.text);

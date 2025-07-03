@@ -6,6 +6,7 @@ import Groq from 'groq-sdk';
 import { Podcast } from "../models/podcast.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { GoogleGenAI } from "@google/genai";
+import {execSync} from "child_process";
 
 dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -126,32 +127,82 @@ export const generateThumbnail = async (req, res, next) => {
   }
 };
 
-// Generate podcast audio using Groq TTS
+// Generate podcast audio using Groq Podcast
 //https://console.groq.com/docs/text-to-speech
 export const generatePodcastAudio = async (req, res, next) => {
   try {
-    const { text, model = "playai-tts", voice = "Fritz-PlayAI", responseFormat = "wav" } = req.body;
-    if (!text) {
-      return res.status(400).json({ message: "Text is required for TTS generation" });
+    const { script } = req.body;
+
+    if (!script) {
+      return res.status(400).json({ message: "Script is required for Podcast generation" });
     }
-    const response = await groq.audio.speech.create({
-      model,
-      voice,
-      input: text,
-      response_format: responseFormat
+    // const response = await groq.audio.speech.create({
+    //   model,
+    //   voice,
+    //   input: text,
+    //   response_format: responseFormat
+    // });
+
+    // Generate audio for each line
+
+
+    const prompt = `
+    Convert this podcast script to JSON with voices "Fritz-PlayAI" and "Arista-PlayAI":
+    ${script}
+    
+    Output example:
+    [
+      { "text": "Welcome to our podcast.", "voice": "Fritz-PlayAI" },
+      { "text": "Thank you for joining us today.", "voice": "Arista-PlayAI" },
+      { "text": "Let's dive into the topic.", "voice": "Fritz-PlayAI" },
+      { "text": "Absolutely, let's begin!", "voice": "Arista-PlayAI" }
+    ]
+
+    Only output the JSON array, no extra text, no explanations, no markdown, just plain text.
+    `;
+
+
+
+    const promptResponse = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt
     });
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-    // Save to a temp file
-    const fileName = `speech_${Date.now()}.wav`;
+    
+    const scripts = JSON.parse(promptResponse.text);
+
+    console.log("Generating audio for script:", scripts);
+
+    const audioBuffers = [];
+    for (const line of scripts) {
+      if (!line.text || !line.voice) {
+        return res.status(400).json({ message: "Each script line must have 'text' and 'voice'" });
+      }
+
+      const response = await groq.audio.speech.create({
+        model: "playai-tts",
+        voice: line.voice,
+        input: line.text,
+        response_format: "wav"
+      });
+
+      const audioBuffer = Buffer.from(await response.arrayBuffer());
+      audioBuffers.push(audioBuffer);
+    }
+
+    const finalAudioBuffer = mergeAudioBuffers(audioBuffers);
+
+    // Save to temp file
+    const fileName = `podcast_${Date.now()}.wav`;
     const tempFilePath = path.join("tmp", fileName);
-    await fs.promises.writeFile(tempFilePath, buffer);
+    await fs.promises.writeFile(tempFilePath, finalAudioBuffer);
 
     // Upload to Cloudinary
     const cloudinaryResult = await cloudinary.uploader.upload(tempFilePath, {
       resource_type: "auto"
     });
-    // Remove temp file after upload
+
+    // Clean up temp file
     await fs.promises.unlink(tempFilePath);
 
     // Return Cloudinary URL
@@ -161,28 +212,126 @@ export const generatePodcastAudio = async (req, res, next) => {
   }
 };
 
+//merge multiple audios
+function mergeAudioBuffers(audioBuffers) {
+  const tempDir = "/tmp/groq-podcast";
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+
+  const tempFiles = audioBuffers.map((buffer, index) => {
+    const filePath = `${tempDir}/part-${index}.wav`;
+    fs.writeFileSync(filePath, buffer);
+    return filePath;
+  });
+
+  const concatListPath = `${tempDir}/concat.txt`;
+  fs.writeFileSync(concatListPath, tempFiles.map(f => `file '${f}'`).join("\n"));
+
+  const outputPath = `${tempDir}/final-output.wav`;
+  execSync(`ffmpeg -f concat -safe 0 -i ${concatListPath} -c copy ${outputPath}`);
+
+  const finalBuffer = fs.readFileSync(outputPath);
+
+  // Cleanup
+  tempFiles.forEach(fs.unlinkSync);
+  fs.unlinkSync(concatListPath);
+  fs.unlinkSync(outputPath);
+
+  return finalBuffer;
+}
 
 
 export const generatePodcastText = async (req, res) => {
-  const { category } = req.body;
-  //console.log(req.body)
-  const prompt = `Generate a 30 word interesting fact for the category: ${category}`;
-  if (!category) {
-    return res.status(400).json({ message: "Category is required" });
+  const { category, podcastTitle } = req.body;
+  if (!category || !podcastTitle) {
+    return res.status(400).json({ message: "Both Name and Category is required" });
   }
-  const response = await gemini.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-  });
-
   const description = await gemini.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `Generate a 8 word description based on those content: ${response.text}`,
+    contents: `Generate a 8 word description based on those content: ${podcastTitle} and ${category}`,
   });
-  console.log(response.text);
+  console.log(podcastTitle);
   console.log(description.text);
-  res.json({ description: description.text, aiprompthere: response.text });
+  res.json({ description: description.text, podcastTitle });
 };
+
+export const generatePodcastScript = async (req, res) => {
+  console.log("Hello with body:", req.body);
+
+  const { givenAiPrompt } = req.body;
+  if (!givenAiPrompt) {
+    return res.status(400).json({ message: "Prompt is required" });
+  }
+
+  try {
+    // First prompt: Generate conversational text
+    const prompt1 = `
+    Generate a podcast script on ${givenAiPrompt} with 2 alternating voices Host and Guest. Total 2 short sentence exchanges.
+    Don't use any markdown or code blocks, just plain text.
+    Format:
+    Host: First Text
+    Guest: Second Text
+    Host: Third Text
+    Guest: Fourth Text
+    `;
+
+    const prompt1Response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt1
+    });
+
+    // Second prompt: Convert to JSON format with voices
+    const prompt2 = `
+    Convert this podcast script to JSON with voices "Fritz-PlayAI" and "Arista-PlayAI":
+    ${prompt1Response.text}
+    
+    Output example:
+    [
+      { "text": "Welcome to our podcast.", "voice": "Fritz-PlayAI" },
+      { "text": "Thank you for joining us today.", "voice": "Arista-PlayAI" },
+      { "text": "Let's dive into the topic.", "voice": "Fritz-PlayAI" },
+      { "text": "Absolutely, let's begin!", "voice": "Arista-PlayAI" }
+    ]
+
+    Only output the JSON array, no extra text, no explanations, no markdown, just plain text.
+    `;
+
+    const prompt2Response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt2
+    });
+
+    // Parse the JSON safely
+    let script;
+    console.log("Response from Gemini:", prompt2Response.text);
+    try {
+      script = JSON.parse(prompt2Response.text);
+    } catch (err) {
+      console.error("Failed to parse JSON from Gemini:", prompt2Response.text);
+      return res.status(500).json({ message: "Invalid JSON response from AI" });
+    }
+    console.log("Generated script:", script);
+
+    if (!Array.isArray(script) || script.length === 0) {
+      return res.status(400).json({ message: "Generated script is empty or invalid" });
+    }
+
+    // Final response
+    // console.log("Generated script:",  prompt1Response.text);
+    // console.log("Generated script:", script);
+    // console.log("Generated script:", cloudinaryResult.secure_url);
+
+    res.json({
+      scriptDescription: prompt1Response.text,//textarea of the box generation
+      generatedScript: script, //json of the script
+    });
+
+  } catch (error) {
+    console.error("Error generating podcast:", error);
+    res.status(500).json({ message: "Error generating podcast", error: error.message });
+  }
+};
+
+
 
 
 export const createPodcast = async (req, res, next) => {
@@ -192,14 +341,14 @@ export const createPodcast = async (req, res, next) => {
   //console.log("Files in request:", req.files.imageFile);
 
   try {
-    const { userName, title, category, description, aiVoice, aiPodcastPrompt, aiThumbnailPrompt, aiThumbnailURL, audiourl } = req.body;
+    const { userName, title, category, description, aiVoice, aiGuestVoice, aiPodcastPrompt, aiThumbnailPrompt, aiThumbnailURL, audiourl } = req.body;
       //console.log(aiThumbnailURL);
      //const image = req.files.imageFile;
     //  console.log("Files in request:", req.files);
     //  console.log("Files in request:", aiThumbnailPrompt);
     //  console.log("Files in request:", audioFile);
 
-    if (!userName || !title || !category || !description || !aiVoice || !aiPodcastPrompt || !aiThumbnailURL || !audiourl) {
+    if (!userName || !title || !category || !description || !aiVoice || !aiGuestVoice || !aiPodcastPrompt || !aiThumbnailURL || !audiourl) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -225,7 +374,8 @@ export const createPodcast = async (req, res, next) => {
       title,
       category,
       description,
-      aiVoice,
+      aiVoice,//host voice
+      aiGuestVoice,//guest voice
       aiPodcastPrompt,
       aiThumbnailPrompt,
       audioUrl,

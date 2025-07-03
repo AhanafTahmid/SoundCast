@@ -1,5 +1,5 @@
 import express from "express";
-import { generatePodcastAudio, createPodcast, generateThumbnail, getAllPodcasts, uploadAudioFile, uploadImageFile, generatePodcastText } from "../controller/podcast.controller.js";
+import { generatePodcastAudio, createPodcast, generateThumbnail, getAllPodcasts, uploadAudioFile, uploadImageFile, generatePodcastText, generatePodcastScript } from "../controller/podcast.controller.js";
 // import multer from "multer";
 // const storage = multer.memoryStorage(); // You can use diskStorage if needed
 // const upload = multer({ storage });
@@ -10,6 +10,8 @@ const router = express.Router();
 router.post("/generate", generatePodcastAudio);
 
 router.post("/thumbnail", generateThumbnail);
+
+router.post("/create-script", generatePodcastScript);
 
 router.post("/description", generatePodcastText);
 

@@ -300,7 +300,7 @@ const CreateTTS = () => {
         onSubmit={handleSubmit}
         className="bg-[#181A20] rounded-lg border border-[#2A2D36] p-6 w-full max-w-xl mx-auto mt-8 mb-4"
       >
-        <h2 className="text-white text-xl font-semibold mb-6">Create a TTS</h2>
+        <h2 className="text-white text-xl font-semibold mb-6">Create a TTS (Text To Speech)</h2>
         <div className="mb-4">
           <label className="block text-zinc-300 mb-1">TTS title</label>
           <input
@@ -325,7 +325,7 @@ const CreateTTS = () => {
                       setCategory(selectedCategory);
 
                       if (!selectedCategory || !ttsTitle){
-                        toast.error("Please select a Title and a category before.");
+                        toast.error("Please select Both Title and a Category.");
                         return;
                       }
 
@@ -401,7 +401,7 @@ const CreateTTS = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-zinc-300 mb-1">AI Voice</label>
+          <label className="block text-zinc-300 mb-1">Select AI Voice</label>
           <select
             className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-zinc-400 focus:outline-none"
             value={aiVoice}
@@ -486,7 +486,7 @@ const CreateTTS = () => {
         loadingScript={loadingScript}
         handleGenerate={handleGenerate}
         onUse={handleUseScript}
-        onCancel={() => setGeneratedScript("")}  
+        onCancel={() => setGeneratedScript("")}
         />
         
             </button>
