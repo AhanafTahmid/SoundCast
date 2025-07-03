@@ -83,7 +83,7 @@ const CreateTTS = () => {
   const [ttsTitle, setTTSTitle] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [aiPrompt, setAiPrompt] = useState("");
+  //const [aiPrompt, setAiPrompt] = useState("");
   const [thumbnailPrompt, setThumbnailPrompt] = useState("");
   const [aiVoice, setaiVoice] = useState(GROQ_VOICE[0].value);
   const [generatingAudio, setGeneratingAudio] = useState(false);
