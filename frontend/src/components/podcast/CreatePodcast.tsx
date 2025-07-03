@@ -76,7 +76,7 @@ const CreatePodcast = () => {
   const [scriptText, setScriptText] = useState<string>("")
   const handleUseScript = () => {
     setScriptText(generatedScript);
-    setShowScriptModal(false);
+    //setShowScriptModal(false);
   };
 
 
@@ -292,7 +292,7 @@ const CreatePodcast = () => {
   }, [aiVoice, hasMounted]);
   const [loading, setLoading] = useState(false);
 
-  const [showScriptModal, setShowScriptModal] = useState(false);
+  //const [showScriptModal, setShowScriptModal] = useState(false);
 
 
   return (
@@ -521,7 +521,7 @@ const CreatePodcast = () => {
            <label className="text-zinc-300 mt-3">Enter Podcast Script</label>
             <button
               type="button"
-              onClick={() => setShowScriptModal(true)}
+              //onClick={() => setShowScriptModal(true)}
             >
               
               <CreateScriptModal 

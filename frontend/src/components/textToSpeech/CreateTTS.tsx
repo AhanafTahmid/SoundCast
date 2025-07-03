@@ -76,7 +76,7 @@ const CreateTTS = () => {
   const [scriptText, setScriptText] = useState<string>("")
   const handleUseScript = () => {
     setScriptText(generatedScript);
-    setShowScriptModal(false);
+    //setShowScriptModal(false);
   };
 
 
@@ -290,7 +290,7 @@ const CreateTTS = () => {
   }, [aiVoice, hasMounted]);
   const [loading, setLoading] = useState(false);
 
-  const [showScriptModal, setShowScriptModal] = useState(false);
+  //const [showScriptModal, setShowScriptModal] = useState(false);
 
 
 
@@ -475,7 +475,7 @@ const CreateTTS = () => {
            <label className="text-zinc-300 mt-3">Enter TTS Script</label>
             <button
               type="button"
-              onClick={() => setShowScriptModal(true)}
+              //onClick={() => setShowScriptModal(true)}
             >
               
               <CreateScriptModal 
