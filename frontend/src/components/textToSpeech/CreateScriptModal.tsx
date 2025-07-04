@@ -63,7 +63,7 @@ export function CreateScriptModal(
     <Dialog>
         <DialogTrigger asChild>
           <span
-          className="cursor-pointer bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition min-w-[120px]"
+          className="cursor-pointer bg-emerald-500 text-black font-semibold hover:bg-emerald-600 px-4 py-2 rounded border border-[#2A2D36] transition min-w-[120px]"
         >
           Generate Script Using AI
         </span>

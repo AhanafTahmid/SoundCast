@@ -563,7 +563,8 @@ const CreatePodcast = () => {
           <div className="flex justify-self-end mt-3">
             <button
               type="button"
-              className="bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition min-w-[120px]"
+              className="mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
+              // className="bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition min-w-[120px]"
               onClick={handleGeneratePodcast}
               // disabled={generatingAudio || !scriptText}
             >
@@ -624,7 +625,9 @@ const CreatePodcast = () => {
             <div className="w-full max-w-xl mx-auto mb-10">
             <button
           type="button"
-          className="w-full bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 rounded transition mt-4 disabled:opacity-50"
+                      // className="w-full mt-2  text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
+
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded transition mt-4 disabled:opacity-50"
           onClick={handleSubmit}
           disabled={isCreating /* || !isFormComplete */}
         >

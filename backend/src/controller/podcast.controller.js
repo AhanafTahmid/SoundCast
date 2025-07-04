@@ -309,8 +309,20 @@ export const generatePodcastScript = async (req, res) => {
   try {
     // First prompt: Generate conversational text
     const prompt1 = `
-    Generate a podcast script on ${givenAiPrompt} with 2 alternating voices Host and Guest. Total 2 short sentence exchanges.
+    Generate a conversational podcast script on ${givenAiPrompt} with 3 alternating voices Host and Guest. Total 2 short sentence exchanges.
     Don't use any markdown or code blocks, just plain text.
+    First the host will introduce the topic and tell the guest about it, then generate a conversation between them.
+    Start with the host introducing the topic, then the guest will respond.
+
+    The guest name is ahanaf, Thank ahanaf First for coming to the podcast. 
+    Just keep the conversation friendly and short, keep each conversation short like 1-2 sentences with 5-10 words.
+
+    The host will ask a question, and the guest will respond with the words like well, I think that, or I believe that, or I feel that, etc.
+    Make the question and response natural and engaging, as if they are having a real conversation.
+    Also Keep the question short and to the point, and the response should be 1-2 sentences long.
+    The host will introduce an interesting fact on the ${givenAiPrompt} and will ask questions like a normal host would do. 
+
+    Use the following format for the conversation:
     Format:
     Host: First Text
     Guest: Second Text
