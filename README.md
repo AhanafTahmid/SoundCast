@@ -4,7 +4,8 @@
 https://soundcast.onrender.com
 
 ## Demo
-Youtube Demo: 
+How to Generate Podcast: https://www.youtube.com/watch?v=7Suius1enhI  
+How to Generate TTS(Text To Speech): https://www.youtube.com/watch?v=_8O9yYNmQOs
 
 ## Setup
 1. git clone https://github.com/AhanafTahmid/SoundCast.git
@@ -38,5 +39,5 @@ For Text to audio Generation : [GROQ](https://console.groq.com/docs/text-to-spee
 For Text to image Generation : [NEBIUS](https://studio.nebius.com/?modality=text2image)
 
 
-# Challenges
-- Adding podcast for multiple voices
+## Challenges
+- Adding podcast for multiple voices(Used multiple Groq TTS for this)
