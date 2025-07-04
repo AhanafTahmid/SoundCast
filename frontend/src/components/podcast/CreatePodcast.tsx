@@ -127,9 +127,9 @@ const CreatePodcast = () => {
     }
   };
 
-  // Call your backend to generate Podcast audio using OpenAI
+  // Call your backend to generate Podcast audio
   const handleGeneratePodcast = async () => {
-    if (!generatedScript) {
+    if (!scriptText) {
       toast.error("Please enter the AI prompt to generate Podcast audio");
       return;
     }
@@ -144,7 +144,8 @@ const CreatePodcast = () => {
       const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
         script: scriptText,
         model: 'playai-tts',
-        voice: aiVoice,
+        aiVoice,
+        aiGuestVoice,
         description,
       });
       // Use only the Cloudinary URL returned by backend
@@ -277,7 +278,7 @@ const CreatePodcast = () => {
     // Generate sample audio for preview when voice changes (background, no autoplay)
     const fetchSample = async () => {
       try {
-        const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
+        const res = await axios.post(`${API_BASE_URL}/api/podcast/generate-sample`, {
           text: "Hello, I was built by ahanaf. Select me if you like my voice",
           model: 'playai-tts',
           voice: aiVoice,
@@ -419,7 +420,7 @@ const CreatePodcast = () => {
             onClick={async () => {
               // Generate a new sample audio with the text 'Hello I am best' for the selected voice
               try {
-                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
+                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate-sample`, {
                   model: 'playai-tts',
                   voice: aiVoice,
                   text: "Hello I was added by ahanaf. Select me if you like my voice",
@@ -462,9 +463,9 @@ const CreatePodcast = () => {
             onClick={async () => {
               // Generate a new sample audio with the text 'Hello I am best' for the selected voice
               try {
-                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
+                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate-sample`, {
                   model: 'playai-tts',
-                  voice: aiVoice,
+                  voice: aiGuestVoice,
                   text: "Hello I was added by ahanaf. Select me if you like my voice",
                   response_format: "wav"
                   //description: "Sample audio preview",
