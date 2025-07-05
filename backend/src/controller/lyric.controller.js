@@ -76,9 +76,9 @@ export const generateLyrics = async (req, res) => {
  console.log(mood , language ,userName);
 
   const prompt =
-  language === "bn"
-    ? `তুমি একজন গীতিকার। ইউজার "${mood}" লিখেছে। যদি এটি কোনো বিদ্যমান বাংলা গানের নাম হয়, তাহলে সেই গানের লিরিকস দাও। যদি না হয়, তাহলে "${mood}" অনুভূতির উপর ভিত্তি করে নতুন আবেগময় একটি বাংলা গানের লিরিকস লেখো।`
-    : `You are a professional lyricist. The user input is: "${mood}". If this is the title of an existing English song, return the lyrics of that song. If it's not a known song title, generate new emotional lyrics based on the mood: "${mood}".`;
+    language === "bn"
+      ? `একটি ${mood} অনুভূতির উপর ভিত্তি করে একটি আবেগময় বাংলা গানের লিরিকস লেখো।`
+      : `Write an emotional song lyric in English based on the mood: ${mood}`;
 
   try {
     const response = await fetch(
@@ -100,7 +100,11 @@ export const generateLyrics = async (req, res) => {
       result.candidates?.[0]?.content?.parts?.[0]?.text || "No lyrics generated.";
     res.json({ lyrics });
 
-     const newLyric = new Lyric({ userName, prompt, lyrics });
+     const newLyric = new Lyric({ 
+      userName, 
+      prompt: mood,
+      lyrics
+    });
     await newLyric.save();
   } catch (err) {
     console.error(err);
