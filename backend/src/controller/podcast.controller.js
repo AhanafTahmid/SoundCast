@@ -204,7 +204,7 @@ export const createPodcast = async (req, res, next) => {
       aiThumbnailPrompt,
       audioUrl,
       thumbnailUrl
-    });
+    }); 
     await podcast.save();
     res.status(201).json({ message: "Created podcast successfully", podcast });
   } catch (error) {

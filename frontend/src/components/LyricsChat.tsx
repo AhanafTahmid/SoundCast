@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
+import { useUser } from "@clerk/clerk-react";
 
 export default function Lyricify() {
   const [mood, setMood] = useState("");
   const [language, setLanguage] = useState("en");
   const [messages, setMessages] = useState<{ text: string; type: "user" | "ai" }[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+   const { user } = useUser();
+   const userName = user?.fullName;
 
   const handleSend = async () => {
     if (!mood.trim()) return;
@@ -16,7 +19,7 @@ export default function Lyricify() {
       const res = await fetch("http://localhost:5000/api/lyrics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood, language }),
+        body: JSON.stringify({ mood, language, userName}),
       });
 
       const data = await res.json();
