@@ -1,11 +1,11 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
+import { useTTSStore } from "@/stores/useTTSStore";
 import toast from "react-hot-toast";
 import { useUser } from "@clerk/clerk-react";
-import {CreateScriptModal} from "./CreatePodcastScriptModal.tsx";
+import {CreateScriptModal} from "./CreateScriptModal";
 import {API_BASE_URL} from "@public/BaseURL.ts";
-import useGeneratedScript from "./useGeneratedPodCastScript.tsx"; 
-import { usePodcastStore } from "@/stores/usePodcastStore.ts";
+import useGeneratedScript from "./useGeneratedScript.ts" 
 
 const GROQ_VOICE = [
   // Groq TTS voices
@@ -61,7 +61,7 @@ const CATEGORIES = [
 //     }
 // }
 
-const CreatePodcast = () => {
+const CreateTTS = () => {
   //context from the modal
   
   const {
@@ -80,9 +80,10 @@ const CreatePodcast = () => {
   };
 
 
-  const [podcastTitle, setPodcastTitle] = useState("");
+  const [ttsTitle, setTTSTitle] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  //const [aiPrompt, setAiPrompt] = useState("");
   const [thumbnailPrompt, setThumbnailPrompt] = useState("");
   const [aiVoice, setaiVoice] = useState(GROQ_VOICE[0].value);
   const [generatingAudio, setGeneratingAudio] = useState(false);
@@ -99,10 +100,8 @@ const CreatePodcast = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
 
-  const [aiGuestVoice, setaiGuestVoice] = useState(GROQ_VOICE[2].value);
-
-  const addPodcast = usePodcastStore((s) => s.addPodcast);
-  const podcastList = usePodcastStore((s) => s.podcastList);
+  const addTTS = useTTSStore((s) => s.addTTS);
+  const ttsList = useTTSStore((s) => s.ttsList);
   const { user } = useUser();
 
   // Remove audio upload input/button and handler
@@ -113,7 +112,7 @@ const CreatePodcast = () => {
       formData.append("imageFile", file);
       setIsUploadingImage(true);
       try {
-        const res = await axios.post(`${API_BASE_URL}/api/podcast/upload-image`, formData, {
+        const res = await axios.post(`${API_BASE_URL}/api/tts/upload-image`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Image uploaded successfully!");
@@ -127,25 +126,24 @@ const CreatePodcast = () => {
     }
   };
 
-  // Call your backend to generate Podcast audio
-  const handleGeneratePodcast = async () => {
-    if (!scriptText) {
-      toast.error("Please enter the AI prompt to generate Podcast audio");
+  // Call your backend to generate TTS audio using OpenAI
+  const handleGenerateTTS = async () => {
+    if (!generatedScript) {
+      toast.error("Please enter the AI prompt to generate TTS audio");
       return;
     }
-    if (!podcastTitle || !category || !description) {
-      toast.error("Please fill in the Podcast title, category, and description before generating audio");
+    if (!ttsTitle || !category || !description) {
+      toast.error("Please fill in the TTS title, category, and description before generating audio");
       return;
     }
     setGeneratingAudio(true);
     setAiAudioUrl(null);
     setAudioFile(null); // Reset audio file before generating
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/podcast/generate`, {
-        script: scriptText,
+      const res = await axios.post(`${API_BASE_URL}/api/tts/generate`, {
+        text: generatedScript,
         model: 'playai-tts',
-        aiVoice,
-        aiGuestVoice,
+        voice: aiVoice,
         description,
       });
       // Use only the Cloudinary URL returned by backend
@@ -157,10 +155,10 @@ const CreatePodcast = () => {
       const fileName = audioUrl.split('/').pop() || 'ai-audio.wav';
       const file = new File([audioBlob], fileName, { type: audioBlob.type });
       setAudioFile(file);
-      toast.success("Podcast Audio generated!");
+      toast.success("TTS Audio generated!");
     } catch (err) {
       console.log(err);
-      toast.error("Failed to generate Podcast audio");
+      toast.error("Failed to generate TTS audio");
     } finally {
       setGeneratingAudio(false);
     }
@@ -172,7 +170,7 @@ const CreatePodcast = () => {
     setGeneratingThumbnail(true);
     setAiThumbnailUrl(null);
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/podcast/thumbnail`, {
+      const res = await axios.post(`${API_BASE_URL}/api/tts/thumbnail`, {
           prompt: thumbnailPrompt
       });
       setAiThumbnailUrl(res.data.imageUrl); // Your backend should return a URL or base64 image
@@ -186,35 +184,34 @@ const CreatePodcast = () => {
   const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
     // Validate required fields
-    if (podcastTitle === "" || category === "" || description === "" || !audioFile || !aiThumbnailUrl) {
+    if (ttsTitle === "" || category === "" || description === "" || !audioFile || !aiThumbnailUrl) {
       toast.error("Please enter all details");
       return;
     }
-    // Prevent duplicate Podcast (same title, description, audio, and thumbnail)
-    const isDuplicate = podcastList.some(
+    // Prevent duplicate TTS (same title, description, audio, and thumbnail)
+    const isDuplicate = ttsList.some(
       (p) =>
-        p.title === podcastTitle &&
+        p.title === ttsTitle &&
         p.description === description &&
         p.audioUrl === aiAudioUrl &&
         p.thumbnailUrl === aiThumbnailUrl
     );
     if (isDuplicate) {
-      toast.error("You cannot create the same Podcast twice");
+      toast.error("You cannot create the same TTS twice");
       return;
     }
     if (!user) {
-      toast.error("You must be signed in to create a Podcast");
+      toast.error("You must be signed in to create a TTS");
       return;
     }
     //push in dbms
     const formData = new FormData();
     formData.append("userName", user.fullName!);
-    formData.append("title", podcastTitle);
+    formData.append("title", ttsTitle);
     formData.append("category", category);
     formData.append("description", description);
-    formData.append("aiVoice", aiVoice);//host voice
-    formData.append("aiGuestVoice", aiGuestVoice);
-    formData.append("aiPodcastPrompt", generatedScript);
+    formData.append("aiVoice", aiVoice);
+    formData.append("aiTTSPrompt", generatedScript);
     formData.append("aiThumbnailPrompt", thumbnailPrompt);
 
     // It is both aithumbnailUrl and customImage, but we only use aiThumbnailUrl now
@@ -231,15 +228,15 @@ const CreatePodcast = () => {
 
     setIsCreating(true);
     try {
-      await axios.post(`${API_BASE_URL}/api/podcast/create`, formData, {
+      await axios.post(`${API_BASE_URL}/api/tts/create`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-      toast.success("Podcast created successfully!");
+      toast.success("TTS created successfully!");
 
-      const newPodcast = {
-        title: podcastTitle,
+      const newTTS = {
+        title: ttsTitle,
         category,
         description,
         audioUrl: aiAudioUrl!,
@@ -249,7 +246,7 @@ const CreatePodcast = () => {
       };
       
 
-      addPodcast(newPodcast);
+      addTTS(newTTS);
       // console.log("Toast should show now");
       // Optionally reset form fields here
     } finally {
@@ -257,8 +254,8 @@ const CreatePodcast = () => {
     }
   };
 
-  // Only allow Podcast creation if all required fields are present (no fallback to customImage)
-  // const isFormComplete = PodcastTitle && category && description && aiAudioUrl && aiThumbnailUrl;
+  // Only allow TTS creation if all required fields are present (no fallback to customImage)
+  // const isFormComplete = TTSTitle && category && description && aiAudioUrl && aiThumbnailUrl;
 
   // Play audio automatically when aiAudioUrl is set
   React.useEffect(() => {
@@ -278,7 +275,7 @@ const CreatePodcast = () => {
     // Generate sample audio for preview when voice changes (background, no autoplay)
     const fetchSample = async () => {
       try {
-        const res = await axios.post(`${API_BASE_URL}/api/podcast/generate-sample`, {
+        const res = await axios.post(`${API_BASE_URL}/api/tts/generate`, {
           text: "Hello, I was built by ahanaf. Select me if you like my voice",
           model: 'playai-tts',
           voice: aiVoice,
@@ -296,21 +293,22 @@ const CreatePodcast = () => {
   //const [showScriptModal, setShowScriptModal] = useState(false);
 
 
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] overflow-y-auto">
       <form
         onSubmit={handleSubmit}
         className="bg-[#181A20] rounded-lg border border-[#2A2D36] p-6 w-full max-w-xl mx-auto mt-8 mb-4"
       >
-        <h2 className="text-white text-xl font-semibold mb-6">Create a Podcast</h2>
+        <h2 className="text-white text-xl font-semibold mb-6">Create a TTS (Text To Speech)</h2>
         <div className="mb-4">
-          <label className="block text-zinc-300 mb-1">Podcast title</label>
+          <label className="block text-zinc-300 mb-1">TTS title</label>
           <input
             type="text"
             className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-white focus:outline-none focus:border-orange-400"
-            placeholder="Enter Podcast title"
-            value={podcastTitle}
-            onChange={e => setPodcastTitle(e.target.value)}
+            placeholder="Enter TTS title"
+            value={ttsTitle}
+            onChange={e => setTTSTitle(e.target.value)}
             required
           />
         </div>
@@ -326,7 +324,7 @@ const CreatePodcast = () => {
                       const selectedCategory = e.target.value;
                       setCategory(selectedCategory);
 
-                      if (!selectedCategory || !podcastTitle){
+                      if (!selectedCategory || !ttsTitle){
                         toast.error("Please select Both Title and a Category.");
                         return;
                       }
@@ -336,8 +334,8 @@ const CreatePodcast = () => {
                         
 
                         // Request Gemini to generate description based on category
-                        const res = await axios.post(`${API_BASE_URL}/api/podcast/description`, {
-                          podcastTitle: podcastTitle,
+                        const res = await axios.post(`${API_BASE_URL}/api/tts/description`, {
+                          ttsTitle: ttsTitle,
                           category: selectedCategory
                         });
                         // console.log("Sending category:", res.data.description);
@@ -396,15 +394,14 @@ const CreatePodcast = () => {
           <label className="block text-zinc-300 mb-1">Description</label>
           <textarea
             className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-white focus:outline-none"
-            placeholder="Write a short description about the Podcast(max 10 Words)"
+            placeholder="Write a short description about the TTS(max 10 Words)"
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={3}
           />
         </div>
-        {/* host voice*/}
         <div className="mb-4">
-          <label className="block text-zinc-300 mb-1">Select Host Voice</label>
+          <label className="block text-zinc-300 mb-1">Select AI Voice</label>
           <select
             className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-zinc-400 focus:outline-none"
             value={aiVoice}
@@ -420,7 +417,7 @@ const CreatePodcast = () => {
             onClick={async () => {
               // Generate a new sample audio with the text 'Hello I am best' for the selected voice
               try {
-                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate-sample`, {
+                const res = await axios.post(`${API_BASE_URL}/api/tts/generate`, {
                   model: 'playai-tts',
                   voice: aiVoice,
                   text: "Hello I was added by ahanaf. Select me if you like my voice",
@@ -444,50 +441,6 @@ const CreatePodcast = () => {
             Hear me
           </button>
         </div>
-
-        {/* guest voice*/}
-        <div className="mb-4">
-          <label className="block text-zinc-300 mb-1">Select Guest Voice</label>
-          <select
-            className="w-full bg-transparent border border-[#2A2D36] rounded px-3 py-2 text-zinc-400 focus:outline-none"
-            value={aiGuestVoice}
-            onChange={e => setaiGuestVoice(e.target.value)}
-          >
-            {GROQ_VOICE.map((voice) => (
-              <option key={voice.value} value={voice.value}>{voice.label}</option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
-            onClick={async () => {
-              // Generate a new sample audio with the text 'Hello I am best' for the selected voice
-              try {
-                const res = await axios.post(`${API_BASE_URL}/api/podcast/generate-sample`, {
-                  model: 'playai-tts',
-                  voice: aiGuestVoice,
-                  text: "Hello I was added by ahanaf. Select me if you like my voice",
-                  response_format: "wav"
-                  //description: "Sample audio preview",
-                });
-                setSampleAudioUrl(res.data.audioUrl);
-                // Play the new sample audio after it loads
-                setTimeout(() => {
-                  if (sampleAudioRef.current) {
-                    sampleAudioRef.current.currentTime = 0;
-                    sampleAudioRef.current.play();
-                  }
-                }, 200);
-              } catch (err) {
-                setSampleAudioUrl(null);
-              }
-            }}
-            //disabled={!aiVoice}
-          >
-            Hear me
-          </button>
-        </div>
-
 
         {/* {loading ? (
         <p className="mt-2 text-zinc-400">Generating AI Prompt
@@ -519,7 +472,7 @@ const CreatePodcast = () => {
 
         
          <div className="flex justify-between mb-3">
-           <label className="text-zinc-300 mt-3">Enter Podcast Script</label>
+           <label className="text-zinc-300 mt-3">Enter TTS Script</label>
             <button
               type="button"
               //onClick={() => setShowScriptModal(true)}
@@ -563,12 +516,13 @@ const CreatePodcast = () => {
           <div className="flex justify-self-end mt-3">
             <button
               type="button"
-              className="mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
-              // className="bg-[#23262F] text-white px-4 py-2 rounded border border-[#2A2D36] hover:bg-[#2A2D36] transition min-w-[120px]"
-              onClick={handleGeneratePodcast}
-              // disabled={generatingAudio || !scriptText}
+                            //className="mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
+
+              className="bg-emerald-500 text-black px-4 py-2 font-semibold rounded border border-[#2A2D36] hover:bg-emerald-600 transition min-w-[120px]"
+              onClick={handleGenerateTTS}
+              disabled={generatingAudio || !scriptText}
             >
-              {generatingAudio ? "Generating..." : "Generate Podcast"}
+              {generatingAudio ? "Generating..." : "Generate TTS"}
             </button>
           </div>
 
@@ -625,13 +579,12 @@ const CreatePodcast = () => {
             <div className="w-full max-w-xl mx-auto mb-10">
             <button
           type="button"
-                      // className="w-full mt-2  text-black font-semibold py-2 px-4 rounded transition disabled:opacity-50"
-
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded transition mt-4 disabled:opacity-50"
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded transition mt-4 disabled:opacity-50"
+          //className="w-full bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 rounded transition mt-4 disabled:opacity-50"
           onClick={handleSubmit}
           disabled={isCreating /* || !isFormComplete */}
         >
-          {isCreating ? "Creating Podcast..." : "Create Podcast"}
+          {isCreating ? "Creating TTS..." : "Create TTS"}
         </button>
              </div>
 
@@ -645,4 +598,4 @@ const CreatePodcast = () => {
   );
 };
 
-export default CreatePodcast;
+export default CreateTTS;

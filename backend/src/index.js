@@ -7,10 +7,14 @@ import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import fileUpload from 'express-fileupload';
 import { clerkMiddleware } from '@clerk/express';
+import { initializeSocket } from  './lib/socket.js'
+import GeneratePodCast from './routes/podcast.route.js'
+import GenerateTTS from './routes/tts.route.js'
+import cron from 'node-cron';
 
 // Internal Imports
 import { connectDB } from './lib/db.js';
-import { initializeSocket } from './lib/socket.js';
+
 
 // Routes
 import userRouters from './routes/user.route.js';
@@ -32,6 +36,37 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+app.use(express.json()); // to parse req.body
+app.use(clerkMiddleware()) //this will add to auth to req object => req.auth.userId
+app.use(fileUpload(
+    {useTempFiles: true,
+        tempFileDir: path.join(__dirname,'tmp'),
+        createParentPath: true,
+        limits:{
+            fileSize: 10*1024*1024 //10mb max file size 
+        }
+    }
+))
+
+// cron jobs
+//delete files from tmp directory every hour
+const tempDir = path.join(process.cwd(), "tmp");
+cron.schedule("0 * * * *", () => {
+	if (fs.existsSync(tempDir)) {
+		fs.readdir(tempDir, (err, files) => {
+			if (err) {
+				console.log("error", err);
+				return;
+			}
+			for (const file of files) {
+				fs.unlink(path.join(tempDir, file), (err) => {});
+			}
+		});
+	}
+});
+
+
+
 
 // Create HTTP server
 const httpServer = createServer(app);
@@ -54,6 +89,9 @@ app.use(fileUpload({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   }
 }));
+//podcast creating by ahanaf
+app.use("/api/podcast", GeneratePodCast);
+app.use("/api/tts", GenerateTTS);//text to speech routes
 
 // Routes
 app.use('/api/users', userRouters);
@@ -76,6 +114,17 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // app.use('/podcastImages', express.static(podcastDir));
 
 // Global Error Handler
+if( process.env.NODE_ENV === 'production' ){
+    // Serve static files from the 'frontend/build' directory
+    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+    // Handle all GET requests by sending the index.html file
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+    })
+}
+
+// error handling
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({
@@ -85,10 +134,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-// Start the server
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-  connectDB();
-  initializeSocket(httpServer);
-});
+httpServer.listen(PORT,() => {
+    console.log('Server is running on port',PORT);
+    connectDB();
+})

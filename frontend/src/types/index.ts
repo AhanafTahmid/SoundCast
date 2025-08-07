@@ -42,6 +42,18 @@ export interface User {
 	imageUrl: string;
 }
 
+
+
+export interface TTS {
+	title: string;
+	category: string;
+	description: string;
+	audioUrl: string;
+	thumbnailUrl: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface Podcast {
 	title: string;
 	category: string;

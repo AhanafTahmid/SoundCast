@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const podcastSchema = new mongoose.Schema({
+const ttsSchema = new mongoose.Schema({
         userName: {
             type: String,
             ref: 'User',
@@ -23,11 +23,7 @@ const podcastSchema = new mongoose.Schema({
             type: String,
             required: true,
         },
-        aiGuestVoice: {
-            type: String,
-            required: true,
-        },
-        aiPodcastPrompt: {
+        aiTTSPrompt: {
             type: String,
             required: true,
         },
@@ -45,7 +41,7 @@ const podcastSchema = new mongoose.Schema({
         },
         
     },
-    { timestamps: true}
+    { timestamps: true }
 );
 
-export const Podcast = mongoose.model('Podcast', podcastSchema);
+export const TTS = mongoose.model('TTS', ttsSchema);

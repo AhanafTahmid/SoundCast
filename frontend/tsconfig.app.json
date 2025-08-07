@@ -10,9 +10,8 @@
     //SHADCN
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@public/*": ["./public/*"]
     },
 
     /* Bundler mode */
