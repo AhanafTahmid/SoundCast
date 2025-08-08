@@ -13,6 +13,8 @@ import { Toaster } from "react-hot-toast";
 import NotFoundPage from "./pages/404/NotFoundPage";
 import AllTTS from "./components/textToSpeech/AllTTS";
 import CreateTTS from "./components/textToSpeech/CreateTTS";
+import Lyricify from "./components/LyricsChat"
+import VoiceRecorder from "./components/VoiceRecorder";
 
 function App() {
 	return (
@@ -33,6 +35,10 @@ function App() {
 					<Route path='/create-tts' element={<CreateTTS />} />
 					<Route path='/all-tts' element={<AllTTS />} />
 					<Route path='/albums/:albumId' element={<AlbumPage />} />
+
+					<Route path='/lyricify' element={<Lyricify />} />
+					<Route path='/voice-recorder' element={<VoiceRecorder />} />
+
 					<Route path='*' element={<NotFoundPage />} />
 				</Route>
 			</Routes>
