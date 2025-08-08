@@ -9,14 +9,8 @@ import AdminPage from "./pages/Admin/AdminPage";
 import CreatePodcast from "./components/podcast/CreatePodcast";
 import AllPodCast from "./components/podcast/AllPodCast";
 
-
 import { Toaster } from "react-hot-toast";
 import NotFoundPage from "./pages/404/NotFoundPage";
-import AllTTS from "./components/textToSpeech/AllTTS";
-import CreateTTS from "./components/textToSpeech/CreateTTS";
-import VoiceRecorder from "./components/VoiceRecorder.js";
-import VoiceRecorderPage from "./pages/VoiceRecorder/VoiceRecorderPage.js";
-import Lyricify from "./components/LyricsChat.js";
 
 function App() {
 	return (
@@ -32,12 +26,8 @@ function App() {
 				<Route element={<MainLayout />}>
 					<Route path='/' element={<HomePage />} />
 					<Route path='/chat' element={<ChatPage />} />
-					<Route path='/create-podcast' element={<CreatePodcast />} />
+					<Route path='/create' element={<CreatePodcast />} />
 					<Route path='/all-podcasts' element={<AllPodCast />} />
-					<Route path='/create-tts' element={<CreateTTS />} />
-					<Route path='/all-tts' element={<AllTTS />} />
-					<Route path="/lyricify" element={<Lyricify />} />;
-					 <Route path='/voice-recorder' element={<VoiceRecorderPage />} /> 
 					<Route path='/albums/:albumId' element={<AlbumPage />} />
 					<Route path='*' element={<NotFoundPage />} />
 				</Route>
