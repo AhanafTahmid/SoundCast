@@ -17,6 +17,8 @@ import { initializeSocket } from  './lib/socket.js'
 import GeneratePodCast from './routes/podcast.route.js'
 import GenerateTTS from './routes/tts.route.js'
 import cron from 'node-cron';
+import lyricRouters from './routes/lyrics.route.js';
+
 
 dotenv.config();
 const __dirname = path.resolve();
@@ -71,6 +73,9 @@ app.use("/api/stats",startRouters)
 //podcast creating by ahanaf
 app.use("/api/podcast", GeneratePodCast);
 app.use("/api/tts", GenerateTTS);//text to speech routes
+
+
+app.use('/api/lyrics', lyricRouters);
 
 // Ensure podcastFiles directory exists at startup
 // const tmpDir = path.join(__dirname, 'podcastFiles');

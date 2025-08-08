@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { SignedIn } from "@clerk/clerk-react";
-import { Headset, HomeIcon, Library, MessageCircle, Mic, Podcast } from "lucide-react";
+import { Headset, HomeIcon, Library, MessageCircle, Mic, Podcast,FileText } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -36,22 +36,31 @@ const LeftSidebar = () => {
 				</Link>
 
 				<SignedIn>
-					<Link to={"/chat"}
-					  className={cn(
-					  buttonVariants({
-						variant: "ghost",
-						className: "w-full justify-start text-white hover:bg-zinc-800",
-						})
-					)}
-					>
-					 <MessageCircle className='mr-2 size-5' />
-					 <span className='hidden md:inline'>Messages</span>
-					</Link>
-
-
-
+	<Link to={"/chat"}
+		className={cn(
+			buttonVariants({
+				variant: "ghost",
+				className: "w-full justify-start text-white hover:bg-zinc-800",
+			})
+		)}
+	>
+		<MessageCircle className='mr-2 size-5' />
+		<span className='hidden md:inline'>Messages</span>
+	</Link>
 				</SignedIn>
-				
+				<SignedIn>
+						<Link to={"/lyricify"}
+		className={cn(
+			buttonVariants({
+				variant: "ghost",
+				className: "w-full justify-start text-white hover:bg-zinc-800",
+			})
+		)}
+	>
+		<FileText className='mr-2 size-5' />
+		<span className='hidden md:inline'>Create Lyrics</span>
+	</Link>
+				</SignedIn>
 				<SignedIn>
 					<Link to={"/create-tts"}
 					  className={cn(
