@@ -63,6 +63,12 @@ app.use(cors({
     credentials:true
 }))
 
+
+// Ping endpoint for uptime monitoring uptimerobot
+app.get('/ping', (req, res) => {
+  res.send('OK');  // just send a simple response
+});
+
 app.use("/api/users", userRouters);
 app.use("/api/auth",authRouters);
 app.use("/api/admin",adminRouters);
